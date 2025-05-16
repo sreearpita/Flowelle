@@ -1,7 +1,17 @@
 import React from 'react';
-import { Link, Outlet } from 'react-router-dom';
+import { Link, Outlet, useNavigate } from 'react-router-dom';
+import { useAppDispatch } from '../../store';
+import { logout } from '../../store/slices/authSlice';
 
 const Layout: React.FC = () => {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await dispatch(logout());
+    navigate('/login');
+  };
+
   return (
     <div className="min-h-screen bg-cream">
       <nav className="bg-deep-indigo text-white">
@@ -38,6 +48,12 @@ const Layout: React.FC = () => {
                 >
                   Profile
                 </Link>
+                <button
+                  onClick={handleLogout}
+                  className="px-3 py-2 rounded-md text-sm font-medium bg-rose-quartz hover:bg-opacity-90 text-white"
+                >
+                  Logout
+                </button>
               </div>
             </div>
           </div>

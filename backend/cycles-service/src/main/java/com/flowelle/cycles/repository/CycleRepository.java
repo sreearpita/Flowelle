@@ -5,9 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.UUID;
 
 @Repository
-public interface CycleRepository extends JpaRepository<Cycle, UUID> {
-    List<Cycle> findByUserId(UUID userId);
+public interface CycleRepository extends JpaRepository<Cycle, Long> {
+    List<Cycle> findByUserId(Long userId);
 } 

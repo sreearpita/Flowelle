@@ -7,14 +7,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class PredictionService {
     private final CycleRepository cycleRepository;
 
-    public CyclePredictionsDto predictNextCycle(UUID userId) {
+    public CyclePredictionsDto predictNextCycle(Long userId) {
         // Fetch the most recent cycle
         Cycle cycle = cycleRepository.findByUserId(userId).stream()
                 .max((c1, c2) -> c1.getStartDate().compareTo(c2.getStartDate()))

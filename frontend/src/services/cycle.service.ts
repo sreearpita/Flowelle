@@ -1,14 +1,25 @@
 import api from './api';
 import { CycleData, CycleDay, Symptom } from '../types/cycle';
+import { store } from '../store';
 
 const cycleService = {
   async getCurrentCycle(): Promise<CycleData> {
-    const response = await api.get<CycleData>('/cycles/current');
+    const state = store.getState();
+    const userId = state.auth.user?.id;
+    if (!userId) {
+      throw new Error('User ID not found');
+    }
+    const response = await api.get<CycleData>(`/cycles/current?userId=${userId.toString()}`);
     return response.data;
   },
 
   async getCycleHistory(): Promise<CycleData[]> {
-    const response = await api.get<CycleData[]>('/cycles/history');
+    const state = store.getState();
+    const userId = state.auth.user?.id;
+    if (!userId) {
+      throw new Error('User ID not found');
+    }
+    const response = await api.get<CycleData[]>(`/cycles/history?userId=${userId.toString()}`);
     return response.data;
   },
 
@@ -37,12 +48,17 @@ const cycleService = {
     fertileWindowEnd: string;
     ovulationDay: string;
   }> {
+    const state = store.getState();
+    const userId = state.auth.user?.id;
+    if (!userId) {
+      throw new Error('User ID not found');
+    }
     const response = await api.get<{
       nextPeriod: string;
       fertileWindowStart: string;
       fertileWindowEnd: string;
       ovulationDay: string;
-    }>('/cycles/predictions');
+    }>(`/cycles/predictions?userId=${userId.toString()}`);
     return response.data;
   }
 };

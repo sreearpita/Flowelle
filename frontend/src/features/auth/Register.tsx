@@ -34,7 +34,7 @@ const Register: React.FC = () => {
     try {
       await dispatch(register({
         ...formData,
-        lastPeriodDate: formData.lastPeriodDate.toISOString(),
+        lastPeriodDate: formData.lastPeriodDate.toISOString().split('T')[0],
       })).unwrap();
       navigate('/calendar');
     } catch (err) {

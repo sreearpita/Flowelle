@@ -16,6 +16,7 @@ export interface CycleDay {
 
 export interface Symptom {
   id?: string;
+  cycleId: string;
   type: string;
   severity: number;
   notes?: string;

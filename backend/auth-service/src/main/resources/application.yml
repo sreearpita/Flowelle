@@ -30,9 +30,13 @@ jwt:
   secret: your-256-bit-secret-key-here-make-it-long-and-secure
   expiration: 86400000 # 24 hours in milliseconds
 
+cycles:
+  service:
+    url: http://localhost:8082
+
 springdoc:
   api-docs:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
-    operationsSorter: method 
+    operationsSorter: method

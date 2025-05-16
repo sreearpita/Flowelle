@@ -32,12 +32,15 @@ const Calendar: React.FC = () => {
   });
 
   const dispatch = useAppDispatch();
-  const { currentCycle, predictions, isLoading } = useAppSelector((state) => state.cycle);
+  const { currentCycle, predictions, isLoading, error } = useAppSelector((state) => state.cycle);
+  const { user } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
-    dispatch(getCurrentCycle());
-    dispatch(getPredictions());
-  }, [dispatch]);
+    if (user?.id) {
+      dispatch(getCurrentCycle());
+      dispatch(getPredictions());
+    }
+  }, [dispatch, user?.id]);
 
   const getDaysInMonth = (date: Date) => {
     const start = startOfMonth(date);
@@ -81,9 +84,14 @@ const Calendar: React.FC = () => {
 
   const handleSymptomSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!currentCycle?.id) {
+      console.error('No active cycle found');
+      return;
+    }
     try {
       await dispatch(logSymptom({
-        date: selectedDate.toISOString(),
+        cycleId: currentCycle.id,
+        date: selectedDate.toISOString().split('T')[0],
         ...symptomForm,
       })).unwrap();
       setShowSymptomModal(false);
@@ -115,58 +123,71 @@ const Calendar: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="grid grid-cols-7 gap-2">
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-          <div key={day} className="text-center font-semibold text-gray-600">
-            {day}
-          </div>
-        ))}
-        {days.map((day) => {
-          const phase = getCyclePhase(day);
-          return (
-            <button
-              key={day.toString()}
-              onClick={() => {
-                setSelectedDate(day);
-                setShowSymptomModal(true);
-              }}
-              className={`
-                p-4 rounded-lg border ${getPhaseColor(phase)}
-                hover:border-rose-quartz focus:outline-none focus:ring-2 focus:ring-rose-quartz
-              `}
-            >
-              <div className="text-center">
-                <span className="text-lg">{format(day, 'd')}</span>
-              </div>
-            </button>
-          );
-        })}
-      </div>
-
-      {predictions && (
-        <div className="mt-8 space-y-4">
-          <h3 className="text-xl font-semibold text-deep-indigo">Upcoming Events</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 bg-rose-quartz bg-opacity-20 rounded-lg">
-              <p className="font-medium">Next Period</p>
-              <p>{format(new Date(predictions.nextPeriod), 'MMM d, yyyy')}</p>
-              <p className="text-sm text-gray-600">
-                in {differenceInDays(new Date(predictions.nextPeriod), new Date())} days
-              </p>
-            </div>
-            <div className="p-4 bg-sage-green bg-opacity-20 rounded-lg">
-              <p className="font-medium">Fertile Window</p>
-              <p>
-                {format(new Date(predictions.fertileWindowStart), 'MMM d')} -{' '}
-                {format(new Date(predictions.fertileWindowEnd), 'MMM d, yyyy')}
-              </p>
-            </div>
-            <div className="p-4 bg-sage-green bg-opacity-20 rounded-lg">
-              <p className="font-medium">Ovulation Day</p>
-              <p>{format(new Date(predictions.ovulationDay), 'MMM d, yyyy')}</p>
-            </div>
-          </div>
+      {error && (
+        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+          {error}
         </div>
+      )}
+      {!user?.id ? (
+        <div className="text-center py-8">
+          <p className="text-lg text-gray-600">Please log in to view your calendar.</p>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-7 gap-2">
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+              <div key={day} className="text-center font-semibold text-gray-600">
+                {day}
+              </div>
+            ))}
+            {days.map((day) => {
+              const phase = getCyclePhase(day);
+              return (
+                <button
+                  key={day.toString()}
+                  onClick={() => {
+                    setSelectedDate(day);
+                    setShowSymptomModal(true);
+                  }}
+                  className={`
+                    p-4 rounded-lg border ${getPhaseColor(phase)}
+                    hover:border-rose-quartz focus:outline-none focus:ring-2 focus:ring-rose-quartz
+                  `}
+                >
+                  <div className="text-center">
+                    <span className="text-lg">{format(day, 'd')}</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {predictions && (
+            <div className="mt-8 space-y-4">
+              <h3 className="text-xl font-semibold text-deep-indigo">Upcoming Events</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-4 bg-rose-quartz bg-opacity-20 rounded-lg">
+                  <p className="font-medium">Next Period</p>
+                  <p>{format(new Date(predictions.nextPeriod), 'MMM d, yyyy')}</p>
+                  <p className="text-sm text-gray-600">
+                    in {differenceInDays(new Date(predictions.nextPeriod), new Date())} days
+                  </p>
+                </div>
+                <div className="p-4 bg-sage-green bg-opacity-20 rounded-lg">
+                  <p className="font-medium">Fertile Window</p>
+                  <p>
+                    {format(new Date(predictions.fertileWindowStart), 'MMM d')} -{' '}
+                    {format(new Date(predictions.fertileWindowEnd), 'MMM d, yyyy')}
+                  </p>
+                </div>
+                <div className="p-4 bg-sage-green bg-opacity-20 rounded-lg">
+                  <p className="font-medium">Ovulation Day</p>
+                  <p>{format(new Date(predictions.ovulationDay), 'MMM d, yyyy')}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {showSymptomModal && (

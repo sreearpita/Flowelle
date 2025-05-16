@@ -33,6 +33,11 @@ const authService = {
   getStoredToken(): string | null {
     return localStorage.getItem('token');
   },
+
+  async updateProfile(profileData: Partial<User>): Promise<User> {
+    const response = await api.put<User>('/auth/me', profileData);
+    return response.data;
+  },
 };
 
 export default authService; 

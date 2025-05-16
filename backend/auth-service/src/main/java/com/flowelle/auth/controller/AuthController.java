@@ -4,6 +4,7 @@ import com.flowelle.auth.dto.AuthResponse;
 import com.flowelle.auth.dto.LoginRequest;
 import com.flowelle.auth.dto.RegisterRequest;
 import com.flowelle.auth.dto.UserResponse;
+import com.flowelle.auth.dto.UpdateProfileRequest;
 import com.flowelle.auth.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -17,6 +18,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.PutMapping;
+import com.flowelle.auth.repository.UserPreferencesRepository;
 
 @RestController
 @RequestMapping("/auth")
@@ -25,6 +28,7 @@ import org.springframework.http.HttpStatus;
 public class AuthController {
 
     private final AuthService authService;
+    private final UserPreferencesRepository userPreferencesRepository;
 
     @PostMapping("/register")
     @Operation(
@@ -52,13 +56,34 @@ public class AuthController {
     public ResponseEntity<UserResponse> getCurrentUser() {
         var principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (principal instanceof com.flowelle.auth.model.User user) {
+            var preferences = userPreferencesRepository.findById(user.getId())
+                .orElseThrow(() -> new RuntimeException("User preferences not found"));
             var response = new UserResponse(
                 user.getId(),
                 user.getEmail(),
                 user.getFirstName(),
-                user.getLastName()
+                user.getLastName(),
+                preferences.getCycleLength(),
+                preferences.getPeriodLength(),
+                preferences.getBirthControlUse()
             );
             return ResponseEntity.ok(response);
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    @PutMapping("/me")
+    @Operation(
+        summary = "Update user profile",
+        description = "Update the current user's profile information"
+    )
+    public ResponseEntity<UserResponse> updateProfile(
+            @Valid @RequestBody UpdateProfileRequest request
+    ) {
+        var principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof com.flowelle.auth.model.User user) {
+            var updatedUser = authService.updateProfile(user.getId(), request);
+            return ResponseEntity.ok(updatedUser);
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }

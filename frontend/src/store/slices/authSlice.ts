@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { AuthState, LoginCredentials, RegisterData } from '../../types/auth';
+import { AuthState, LoginCredentials, RegisterData, User } from '../../types/auth';
 import authService from '../../services/auth.service';
 
 const initialState: AuthState = {
@@ -34,6 +34,13 @@ export const getCurrentUser = createAsyncThunk(
   'auth/getCurrentUser',
   async () => {
     return await authService.getCurrentUser();
+  }
+);
+
+export const updateProfile = createAsyncThunk<User, Partial<User>>(
+  'auth/updateProfile',
+  async (profileData) => {
+    return await authService.updateProfile(profileData);
   }
 );
 
@@ -92,6 +99,19 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.user = null;
         state.token = null;
+      })
+      // Update Profile
+      .addCase(updateProfile.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(updateProfile.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload;
+      })
+      .addCase(updateProfile.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.error.message || 'Failed to update profile';
       });
   },
 });

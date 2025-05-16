@@ -8,10 +8,9 @@ import com.flowelle.cycles.repository.CycleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -20,7 +19,7 @@ public class CycleService {
     private final CycleRepository cycleRepository;
     private final SymptomService symptomService;
 
-    public CycleDataDto getCurrentCycle(UUID userId) {
+    public CycleDataDto getCurrentCycle(Long userId) {
         // Find the most recent cycle for a user (for simplicity, assume sorted by startDate)
         return cycleRepository.findByUserId(userId).stream()
                 .max((c1, c2) -> c1.getStartDate().compareTo(c2.getStartDate()))
@@ -28,7 +27,7 @@ public class CycleService {
                 .orElse(null);
     }
 
-    public List<CycleDataDto> getCycleHistory(UUID userId) {
+    public List<CycleDataDto> getCycleHistory(Long userId) {
         return cycleRepository.findByUserId(userId).stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
@@ -36,10 +35,9 @@ public class CycleService {
 
     public CycleDataDto startCycle(CycleDataDto cycleDto) {
         Cycle cycle = Cycle.builder()
-                .id(UUID.fromString(cycleDto.getId()))
-                .userId(UUID.fromString(cycleDto.getDays().get(0).getDate()))
-                .startDate(LocalDateTime.parse(cycleDto.getStartDate()).toLocalDate())
-                .endDate(cycleDto.getEndDate() != null ? LocalDateTime.parse(cycleDto.getEndDate()).toLocalDate() : null)
+                .userId(Long.parseLong(cycleDto.getUserId()))
+                .startDate(LocalDate.parse(cycleDto.getStartDate()))
+                .endDate(cycleDto.getEndDate() != null ? LocalDate.parse(cycleDto.getEndDate()) : null)
                 .periodLength(cycleDto.getPeriodLength())
                 .cycleLength(cycleDto.getCycleLength())
                 .notes(cycleDto.getNotes())
@@ -48,10 +46,10 @@ public class CycleService {
         return toDto(saved);
     }
 
-    public CycleDataDto updateCycle(UUID id, CycleDataDto cycleDto) {
+    public CycleDataDto updateCycle(Long id, CycleDataDto cycleDto) {
         Cycle cycle = cycleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cycle not found"));
-        cycle.setEndDate(cycleDto.getEndDate() != null ? LocalDateTime.parse(cycleDto.getEndDate()).toLocalDate() : null);
+        cycle.setEndDate(cycleDto.getEndDate() != null ? LocalDate.parse(cycleDto.getEndDate()) : null);
         cycle.setPeriodLength(cycleDto.getPeriodLength());
         cycle.setCycleLength(cycleDto.getCycleLength());
         cycle.setNotes(cycleDto.getNotes());
@@ -75,6 +73,7 @@ public class CycleService {
 
         return CycleDataDto.builder()
                 .id(cycle.getId().toString())
+                .userId(cycle.getUserId().toString())
                 .startDate(cycle.getStartDate().toString())
                 .endDate(cycle.getEndDate() != null ? cycle.getEndDate().toString() : null)
                 .periodLength(cycle.getPeriodLength())

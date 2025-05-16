@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -18,7 +17,7 @@ public class SymptomService {
 
     public SymptomDto logSymptom(SymptomDto dto) {
         Symptom symptom = Symptom.builder()
-                .cycleId(UUID.fromString(dto.getCycleId()))
+                .cycleId(Long.parseLong(dto.getCycleId()))
                 .type(dto.getType())
                 .severity(dto.getSeverity())
                 .date(LocalDate.parse(dto.getDate()))
@@ -28,7 +27,7 @@ public class SymptomService {
         return toDto(saved);
     }
 
-    public SymptomDto updateSymptom(UUID id, SymptomDto dto) {
+    public SymptomDto updateSymptom(Long id, SymptomDto dto) {
         Symptom symptom = symptomRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Symptom not found"));
         symptom.setType(dto.getType());
@@ -39,11 +38,11 @@ public class SymptomService {
         return toDto(updated);
     }
 
-    public void deleteSymptom(UUID id) {
+    public void deleteSymptom(Long id) {
         symptomRepository.deleteById(id);
     }
 
-    public List<SymptomDto> getSymptomsByCycle(UUID cycleId) {
+    public List<SymptomDto> getSymptomsByCycle(Long cycleId) {
         return symptomRepository.findByCycleId(cycleId).stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());

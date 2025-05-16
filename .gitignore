@@ -1,2 +1,14 @@
 # Ignore node modules
 **/node_modules
+frontend/.git
+
+# Mac system files
+.DS_Store
+
+# Java
+target
+*.log
+
+# IntelliJ / VSCode
+.idea/
+.vscode/

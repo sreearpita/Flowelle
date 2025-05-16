@@ -1,46 +1,136 @@
-# Getting Started with Create React App
+# Flowelle Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A modern, user-friendly women's health tracking platform built with React and TypeScript.
 
-## Available Scripts
+## Tech Stack
 
-In the project directory, you can run:
+- **Framework:** React 19 with TypeScript
+- **State Management:** Redux Toolkit
+- **Routing:** React Router v6
+- **Styling:** Tailwind CSS v3
+- **Date Handling:** date-fns v4
+- **HTTP Client:** Axios
+- **Form Components:** react-datepicker
+- **Charts:** Chart.js with react-chartjs-2
+- **Development Tools:**
+  - Create React App
+  - TypeScript
+  - ESLint
+  - PostCSS
 
-### `npm start`
+## Features
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+### Implemented
+- ✅ User Authentication (Login/Register)
+- ✅ Protected Routes
+- ✅ Calendar View with Cycle Tracking
+- ✅ Symptom Logging
+- ✅ Cycle Phase Visualization
+- ✅ Predictions for:
+  - Next Period
+  - Fertile Window
+  - Ovulation Day
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+### In Progress
+- 🔄 Insights Dashboard
+- 🔄 Community Features
+- 🔄 User Profile Management
 
-### `npm test`
+## Getting Started
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Prerequisites
+- Node.js (v16 or higher)
+- npm (v8 or higher)
 
-### `npm run build`
+### Installation
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+1. Clone the repository
+```bash
+git clone <repository-url>
+cd frontend
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+2. Install dependencies
+```bash
+npm install
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+3. Start the development server
+```bash
+npm start
+```
 
-### `npm run eject`
+The application will be available at `http://localhost:3000`.
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+## Project Structure
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```
+src/
+├── components/         # Reusable UI components
+├── features/          # Feature-specific components and logic
+│   ├── auth/         # Authentication related components
+│   ├── calendar/     # Calendar and cycle tracking
+│   ├── insights/     # Data visualization and insights
+│   ├── community/    # Community features
+│   └── profile/      # User profile management
+├── services/         # API service layer
+├── store/           # Redux store configuration and slices
+├── types/           # TypeScript type definitions
+└── utils/           # Utility functions and helpers
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+## State Management
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+- Using Redux Toolkit for global state management
+- Separate slices for:
+  - Authentication state
+  - Cycle tracking data
+  - User preferences
 
-## Learn More
+## API Integration
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+- RESTful API communication via Axios
+- Centralized API configuration
+- Token-based authentication
+- Error handling and interceptors
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Styling
+
+- Tailwind CSS for utility-first styling
+- Custom theme configuration:
+  - Color palette (deep-indigo, rose-quartz, sage-green, cream)
+  - Typography (Playfair Display for headings, Inter for body text)
+  - Responsive design breakpoints
+
+## Development Guidelines
+
+1. **TypeScript**
+   - Strict type checking enabled
+   - Interface-first approach for data structures
+   - Proper type definitions for all components and functions
+
+2. **Component Structure**
+   - Functional components with hooks
+   - Props interface definitions
+   - Proper error boundaries
+   - Loading states handled consistently
+
+3. **State Management**
+   - Use local state for component-specific data
+   - Redux for shared/global state
+   - Proper action typing and error handling
+
+4. **Code Style**
+   - ESLint configuration
+   - Consistent naming conventions
+   - Component and function documentation
+
+## Contributing
+
+1. Create a feature branch
+2. Make your changes
+3. Submit a pull request
+
+## License
+
+[Your License Here]

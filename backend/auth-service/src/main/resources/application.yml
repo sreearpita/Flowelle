@@ -27,7 +27,7 @@ logging:
     com.flowelle: DEBUG
 
 jwt:
-  secret: your-256-bit-secret-key-here-make-it-long-and-secure
+  secret: 0cb661660f45f6bd78dc82efa01a3c2c21ac8f4c3518ed53c8000c0f30766b39
   expiration: 86400000 # 24 hours in milliseconds
 
 cycles:

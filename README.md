@@ -1,98 +1,83 @@
-# Flowelle - Women's Health Platform
+# Flowelle
 
-Your body, your rhythm. A comprehensive women's health platform for menstrual cycle tracking and wellness.
+Flowelle is a menstrual health tracking app with a React frontend and two Spring Boot backend services.
 
-## Project Overview
+## Current Repository State
 
-Flowelle is a modern, user-centric women's health platform that provides:
-- Menstrual cycle tracking
-- Fertility window prediction
-- Symptom and mood logging
-- Health insights & personalized tips
-- Community features and doctor consultations
+This repository currently contains:
+1. `frontend` (React + TypeScript + Redux Toolkit + Tailwind)
+2. `backend/auth-service` (JWT auth, user profile, preferences)
+3. `backend/cycles-service` (cycle tracking, symptom logging, predictions)
 
-## Tech Stack
-
-### Frontend
-- React 18+
-- Redux Toolkit
-- TailwindCSS
-- Chart.js
-- date-fns
-
-### Backend
-- Spring Boot Microservices
-- PostgreSQL
-- Redis
-- JWT Authentication
-
-### Infrastructure
-- Docker & Docker Compose
-- AWS Services (S3, RDS)
-- CI/CD with GitHub Actions
+It does **not** currently contain a checked-in API gateway service.
 
 ## Project Structure
 
-```
+```text
 flowelle/
-├── frontend/           # React frontend application
-├── api-gateway/        # Spring Boot API Gateway
-├── services/
-│   ├── auth-service/   # Authentication & User Management
-│   ├── cycle-service/  # Cycle Tracking & Predictions
-│   ├── report-service/ # Analytics & Reporting
-│   ├── doctor-service/ # Doctor Consultation
-│   └── community/      # Community & Forum
-└── docker/            # Docker configurations
+├── backend/
+│   ├── auth-service/
+│   └── cycles-service/
+├── frontend/
+├── nginx/
+└── docker-compose.yml
 ```
 
-## Getting Started
+## Runtime Ports
+
+1. Frontend dev server: `http://localhost:3000`
+2. Auth service: `http://localhost:8081/api`
+3. Cycles service: `http://localhost:8082/api`
+
+## Local Development
 
 ### Prerequisites
-- Node.js 18+
-- Java 17+
-- Docker & Docker Compose
-- PostgreSQL 14+
-- Redis
 
-### Development Setup
+1. Node.js 18+
+2. npm 8+
+3. Java 17+
+4. Maven 3.8+
+5. PostgreSQL 14+
 
-1. Clone the repository:
+### Database Setup
+
+Create both databases:
+
 ```bash
-git clone https://github.com/your-org/flowelle.git
-cd flowelle
+createdb flowelle
+createdb flowelle_cycle
 ```
 
-2. Start the infrastructure services:
+Defaults in service configs currently use:
+1. username: `postgres`
+2. password: `postgres`
+
+### Run Backend Services
+
 ```bash
-docker-compose up -d
+cd backend/auth-service
+mvn spring-boot:run
 ```
 
-3. Start the backend services:
 ```bash
-cd api-gateway
+cd backend/cycles-service
 ./mvnw spring-boot:run
 ```
 
-4. Start the frontend development server:
+### Run Frontend
+
 ```bash
 cd frontend
 npm install
-npm run dev
+npm start
 ```
 
-## Color Palette
+## API Routing Note
 
-- Primary Accent: #FF6F91 (Rose Quartz)
-- Background/Depth: #2E3A59 (Deep Indigo)
-- Base/Contrast: #FAF4EF (Cream)
-- Calm/Success: #B7D6C2 (Sage Green)
-- Highlights: #FF9A8B (Soft Coral)
+Frontend API client defaults to `http://localhost:8080/api` (`REACT_APP_API_URL`), which assumes a gateway/proxy is available.
 
-## Contributing
+In the current repository, there is no gateway implementation checked in, so full end-to-end routing for both `/auth/*` and `/cycles/*` through one base URL requires adding your own proxy or updating frontend API wiring.
 
-Please read our [Contributing Guidelines](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+## Docker Compose Note
 
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. 
+`docker-compose.yml` still references `api-gateway`, and `nginx/` is incomplete for that setup. Treat compose as a work-in-progress unless you add the missing gateway/proxy pieces.

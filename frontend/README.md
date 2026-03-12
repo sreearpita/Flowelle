@@ -1,136 +1,81 @@
 # Flowelle Frontend
 
-A modern, user-friendly women's health tracking platform built with React and TypeScript.
+React + TypeScript client for Flowelle.
 
-## Tech Stack
+## Stack
 
-- **Framework:** React 19 with TypeScript
-- **State Management:** Redux Toolkit
-- **Routing:** React Router v6
-- **Styling:** Tailwind CSS v3
-- **Date Handling:** date-fns v4
-- **HTTP Client:** Axios
-- **Form Components:** react-datepicker
-- **Charts:** Chart.js with react-chartjs-2
-- **Development Tools:**
-  - Create React App
-  - TypeScript
-  - ESLint
-  - PostCSS
+1. React 19 (Create React App)
+2. TypeScript
+3. Redux Toolkit
+4. React Router v6
+5. Tailwind CSS
+6. Axios
+7. date-fns
+8. react-datepicker
 
-## Features
+## Current Features
 
-### Implemented
-- ✅ User Authentication (Login/Register)
-- ✅ Protected Routes
-- ✅ Calendar View with Cycle Tracking
-- ✅ Symptom Logging
-- ✅ Cycle Phase Visualization
-- ✅ Predictions for:
-  - Next Period
-  - Fertile Window
-  - Ovulation Day
+Implemented:
+1. Login / Register
+2. Protected routing
+3. Calendar month view
+4. Symptom logging modal
+5. Basic cycle event cards (next period, fertile window, ovulation)
+6. Profile view + profile update form
 
-### In Progress
-- 🔄 Insights Dashboard
-- 🔄 Community Features
-- 🔄 User Profile Management
+Placeholder pages:
+1. Insights
+2. Community
 
-## Getting Started
+## App Routes
+
+1. `/login`
+2. `/register`
+3. `/calendar` (protected)
+4. `/insights` (protected)
+5. `/community` (protected)
+6. `/profile` (protected)
+
+## Local Run
 
 ### Prerequisites
-- Node.js (v16 or higher)
-- npm (v8 or higher)
 
-### Installation
+1. Node.js 18+
+2. npm 8+
 
-1. Clone the repository
-```bash
-git clone <repository-url>
-cd frontend
-```
+### Install and start
 
-2. Install dependencies
 ```bash
 npm install
-```
-
-3. Start the development server
-```bash
 npm start
 ```
 
-The application will be available at `http://localhost:3000`.
+Dev server: `http://localhost:3000`
 
-## Project Structure
+## API Configuration
 
-```
-src/
-├── components/         # Reusable UI components
-├── features/          # Feature-specific components and logic
-│   ├── auth/         # Authentication related components
-│   ├── calendar/     # Calendar and cycle tracking
-│   ├── insights/     # Data visualization and insights
-│   ├── community/    # Community features
-│   └── profile/      # User profile management
-├── services/         # API service layer
-├── store/           # Redux store configuration and slices
-├── types/           # TypeScript type definitions
-└── utils/           # Utility functions and helpers
-```
+The Axios base URL is configured in `src/services/api.ts`:
+1. `REACT_APP_API_URL` if provided
+2. Otherwise defaults to `http://localhost:8080/api`
+
+The app expects these endpoints under one base URL:
+1. `/auth/*`
+2. `/cycles/*`
+
+In the current repository there is no checked-in API gateway, so if auth and cycle services run on separate ports (`8081` and `8082`), you need a proxy/gateway or service-level frontend API adjustments.
 
 ## State Management
 
-- Using Redux Toolkit for global state management
-- Separate slices for:
-  - Authentication state
-  - Cycle tracking data
-  - User preferences
+Redux slices:
+1. `auth` slice (`src/store/slices/authSlice.ts`)
+2. `cycle` slice (`src/store/slices/cycleSlice.ts`)
 
-## API Integration
+Token handling:
+1. JWT stored in `localStorage`
+2. Axios request interceptor attaches `Authorization: Bearer <token>`
+3. `401` response interceptor clears token and redirects to `/login`
 
-- RESTful API communication via Axios
-- Centralized API configuration
-- Token-based authentication
-- Error handling and interceptors
+## Current Limitations
 
-## Styling
-
-- Tailwind CSS for utility-first styling
-- Custom theme configuration:
-  - Color palette (deep-indigo, rose-quartz, sage-green, cream)
-  - Typography (Playfair Display for headings, Inter for body text)
-  - Responsive design breakpoints
-
-## Development Guidelines
-
-1. **TypeScript**
-   - Strict type checking enabled
-   - Interface-first approach for data structures
-   - Proper type definitions for all components and functions
-
-2. **Component Structure**
-   - Functional components with hooks
-   - Props interface definitions
-   - Proper error boundaries
-   - Loading states handled consistently
-
-3. **State Management**
-   - Use local state for component-specific data
-   - Redux for shared/global state
-   - Proper action typing and error handling
-
-4. **Code Style**
-   - ESLint configuration
-   - Consistent naming conventions
-   - Component and function documentation
-
-## Contributing
-
-1. Create a feature branch
-2. Make your changes
-3. Submit a pull request
-
-## License
-
-[Your License Here]
+1. `updateCycleDay` client method calls `/cycles/days/{date}`, but no matching backend endpoint currently exists.
+2. Test coverage is minimal (default CRA test scaffold remains).

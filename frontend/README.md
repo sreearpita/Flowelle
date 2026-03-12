@@ -4,7 +4,7 @@ React + TypeScript client for Flowelle.
 
 ## Stack
 
-1. React 19 (Create React App)
+1. React 19 (Vite)
 2. TypeScript
 3. Redux Toolkit
 4. React Router v6
@@ -47,7 +47,7 @@ Placeholder pages:
 
 ```bash
 npm install
-npm start
+npm run dev
 ```
 
 Dev server: `http://localhost:3000`
@@ -55,14 +55,16 @@ Dev server: `http://localhost:3000`
 ## API Configuration
 
 The Axios base URL is configured in `src/services/api.ts`:
-1. `REACT_APP_API_URL` if provided
-2. Otherwise defaults to `http://localhost:8080/api`
+1. `VITE_API_URL` if provided
+2. Otherwise defaults to `/api`
 
 The app expects these endpoints under one base URL:
 1. `/auth/*`
 2. `/cycles/*`
 
-In the current repository there is no checked-in API gateway, so if auth and cycle services run on separate ports (`8081` and `8082`), you need a proxy/gateway or service-level frontend API adjustments.
+Development proxy is configured in `vite.config.mts`:
+1. `/api/auth/*` -> `http://localhost:8081`
+2. `/api/cycles/*` -> `http://localhost:8082`
 
 ## State Management
 

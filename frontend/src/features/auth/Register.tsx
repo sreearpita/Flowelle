@@ -32,48 +32,47 @@ const Register: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await dispatch(register({
-        ...formData,
-        lastPeriodDate: formData.lastPeriodDate.toISOString().split('T')[0],
-      })).unwrap();
+      await dispatch(
+        register({
+          ...formData,
+          lastPeriodDate: formData.lastPeriodDate.toISOString().split('T')[0],
+        })
+      ).unwrap();
       navigate('/calendar');
-    } catch (err) {
-      // Error is handled by the auth slice
+    } catch {
+      // Error is handled by slice
     }
   };
 
   const handleDateChange = (date: Date | null) => {
     if (date) {
-      setFormData(prev => ({ ...prev, lastPeriodDate: date }));
+      setFormData((prev) => ({ ...prev, lastPeriodDate: date }));
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-cream py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-display font-bold text-deep-indigo">
-            Create your Flowelle account
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Already have an account?{' '}
-            <Link to="/login" className="font-medium text-rose-quartz hover:text-opacity-90">
-              Sign in
-            </Link>
-          </p>
-        </div>
+    <div className="flex min-h-screen items-center justify-center px-4 py-10 sm:px-8">
+      <div className="bloom-card w-full max-w-4xl p-7 sm:p-9 animate-fadeInUp">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">Create account</p>
+        <h2 className="bloom-title mt-2 text-[38px]">Start your Flowelle journey</h2>
+        <p className="mt-2 text-sm text-muted">
+          Already have an account?{' '}
+          <Link to="/login" className="font-bold text-rose-quartz hover:brightness-110">
+            Sign in
+          </Link>
+        </p>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
           {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="text-sm text-red-700">{error}</div>
+            <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {error}
             </div>
           )}
 
-          <div className="rounded-md shadow-sm space-y-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
-                First Name
+              <label htmlFor="firstName" className="text-sm font-semibold text-muted">
+                First name
               </label>
               <input
                 id="firstName"
@@ -82,13 +81,13 @@ const Register: React.FC = () => {
                 required
                 value={formData.firstName}
                 onChange={handleChange}
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-rose-quartz focus:border-rose-quartz sm:text-sm"
+                className="flow-input"
               />
             </div>
 
             <div>
-              <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
-                Last Name
+              <label htmlFor="lastName" className="text-sm font-semibold text-muted">
+                Last name
               </label>
               <input
                 id="lastName"
@@ -97,45 +96,48 @@ const Register: React.FC = () => {
                 required
                 value={formData.lastName}
                 onChange={handleChange}
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-rose-quartz focus:border-rose-quartz sm:text-sm"
+                className="flow-input"
               />
             </div>
+          </div>
 
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={formData.email}
-                onChange={handleChange}
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-rose-quartz focus:border-rose-quartz sm:text-sm"
-              />
-            </div>
+          <div>
+            <label htmlFor="email" className="text-sm font-semibold text-muted">
+              Email
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              value={formData.email}
+              onChange={handleChange}
+              className="flow-input"
+              placeholder="name@example.com"
+            />
+          </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                required
-                value={formData.password}
-                onChange={handleChange}
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-rose-quartz focus:border-rose-quartz sm:text-sm"
-              />
-            </div>
+          <div>
+            <label htmlFor="password" className="text-sm font-semibold text-muted">
+              Password
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="new-password"
+              required
+              value={formData.password}
+              onChange={handleChange}
+              className="flow-input"
+            />
+          </div>
 
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label htmlFor="cycleLength" className="block text-sm font-medium text-gray-700">
-                Average Cycle Length (days)
+              <label htmlFor="cycleLength" className="text-sm font-semibold text-muted">
+                Cycle length (days)
               </label>
               <input
                 id="cycleLength"
@@ -146,13 +148,13 @@ const Register: React.FC = () => {
                 required
                 value={formData.cycleLength}
                 onChange={handleChange}
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-rose-quartz focus:border-rose-quartz sm:text-sm"
+                className="flow-input"
               />
             </div>
 
             <div>
-              <label htmlFor="periodLength" className="block text-sm font-medium text-gray-700">
-                Average Period Length (days)
+              <label htmlFor="periodLength" className="text-sm font-semibold text-muted">
+                Period length (days)
               </label>
               <input
                 id="periodLength"
@@ -163,50 +165,42 @@ const Register: React.FC = () => {
                 required
                 value={formData.periodLength}
                 onChange={handleChange}
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-rose-quartz focus:border-rose-quartz sm:text-sm"
+                className="flow-input"
               />
-            </div>
-
-            <div>
-              <label htmlFor="lastPeriodDate" className="block text-sm font-medium text-gray-700">
-                First Day of Last Period
-              </label>
-              <DatePicker
-                selected={formData.lastPeriodDate}
-                onChange={handleDateChange}
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-rose-quartz focus:border-rose-quartz sm:text-sm"
-                maxDate={new Date()}
-              />
-            </div>
-
-            <div className="flex items-center">
-              <input
-                id="birthControlUse"
-                name="birthControlUse"
-                type="checkbox"
-                checked={formData.birthControlUse}
-                onChange={handleChange}
-                className="h-4 w-4 text-rose-quartz focus:ring-rose-quartz border-gray-300 rounded"
-              />
-              <label htmlFor="birthControlUse" className="ml-2 block text-sm text-gray-700">
-                I use birth control
-              </label>
             </div>
           </div>
 
           <div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-rose-quartz hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-quartz disabled:opacity-50"
-            >
-              {isLoading ? 'Creating account...' : 'Create account'}
-            </button>
+            <label htmlFor="lastPeriodDate" className="text-sm font-semibold text-muted">
+              First day of last period
+            </label>
+            <DatePicker
+              selected={formData.lastPeriodDate}
+              onChange={handleDateChange}
+              className="flow-input"
+              maxDate={new Date()}
+            />
           </div>
+
+          <label className="flex items-center gap-3 rounded-xl border border-line bg-white px-4 py-3 text-sm text-ink">
+            <input
+              id="birthControlUse"
+              name="birthControlUse"
+              type="checkbox"
+              checked={formData.birthControlUse}
+              onChange={handleChange}
+              className="h-4 w-4 rounded border-line text-rose-quartz focus:ring-rose-quartz"
+            />
+            I use birth control
+          </label>
+
+          <button type="submit" disabled={isLoading} className="flow-btn-primary w-full">
+            {isLoading ? 'Creating account...' : 'Create account'}
+          </button>
         </form>
       </div>
     </div>
   );
 };
 
-export default Register; 
+export default Register;

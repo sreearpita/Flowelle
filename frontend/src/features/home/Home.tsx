@@ -3,52 +3,42 @@ import { Link } from 'react-router-dom';
 
 const Home: React.FC = () => {
   return (
-    <div className="min-h-screen bg-cream py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto text-center">
-        <h1 className="text-5xl font-display text-deep-indigo mb-6">
-          Welcome to Flowelle
-        </h1>
-        <p className="text-xl mb-8">
-          Track your cycle, understand your body, and make informed decisions about your health.
+    <div className="flex min-h-screen items-center justify-center px-4 py-10 sm:px-8">
+      <div className="bloom-card w-full max-w-5xl p-8 sm:p-10">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">Flowelle</p>
+        <h1 className="bloom-title mt-2 text-4xl">Your cycle, seen with clarity</h1>
+        <p className="mt-4 max-w-2xl text-base text-muted">
+          Track symptoms, view predictions, and understand patterns in a calm dashboard experience.
         </p>
 
-        <div className="grid md:grid-cols-3 gap-6 mt-12">
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-2xl font-display text-rose-quartz mb-4">Track</h2>
-            <p className="mb-4">Log your cycle, symptoms, and mood to build a complete picture of your health.</p>
-            <Link
-              to="/calendar"
-              className="inline-block bg-rose-quartz text-white px-4 py-2 rounded-md hover:bg-opacity-90"
-            >
-              Start Tracking
+        <div className="mt-8 grid gap-4 md:grid-cols-3">
+          <article className="bloom-card p-5">
+            <h2 className="font-display text-2xl text-ink">Track</h2>
+            <p className="mt-2 text-base text-muted">Log cycle events and symptoms quickly.</p>
+            <Link to="/calendar" className="flow-btn-primary mt-4">
+              Open Dashboard
             </Link>
-          </div>
+          </article>
 
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-2xl font-display text-rose-quartz mb-4">Learn</h2>
-            <p className="mb-4">Get personalized insights and predictions based on your unique patterns.</p>
-            <Link
-              to="/insights"
-              className="inline-block bg-rose-quartz text-white px-4 py-2 rounded-md hover:bg-opacity-90"
-            >
+          <article className="bloom-card p-5">
+            <h2 className="font-display text-2xl text-ink">Learn</h2>
+            <p className="mt-2 text-base text-muted">Follow hormone patterns and upcoming windows.</p>
+            <Link to="/insights" className="flow-btn-secondary mt-4">
               View Insights
             </Link>
-          </div>
+          </article>
 
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-2xl font-display text-rose-quartz mb-4">Connect</h2>
-            <p className="mb-4">Join our community of users and share experiences in a safe space.</p>
-            <Link
-              to="/community"
-              className="inline-block bg-rose-quartz text-white px-4 py-2 rounded-md hover:bg-opacity-90"
-            >
-              Join Community
+          <article className="bloom-card p-5">
+            <h2 className="font-display text-2xl text-ink">Connect</h2>
+            <p className="mt-2 text-base text-muted">Join curated community circles when launched.</p>
+            <Link to="/community" className="flow-btn-secondary mt-4">
+              Community
             </Link>
-          </div>
+          </article>
         </div>
       </div>
     </div>
   );
 };
 
-export default Home; 
+export default Home;

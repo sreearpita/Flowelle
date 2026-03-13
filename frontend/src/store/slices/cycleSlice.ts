@@ -24,6 +24,13 @@ export const getCycleHistory = createAsyncThunk<CycleData[]>(
   }
 );
 
+export const createCycle = createAsyncThunk<
+  CycleData,
+  { startDate: string; cycleLength: number; periodLength: number; notes?: string }
+>('cycle/createCycle', async (cycleData) => {
+  return await cycleService.createCycle(cycleData);
+});
+
 export const logSymptom = createAsyncThunk<Symptom, Omit<Symptom, 'id'>>(
   'cycle/logSymptom',
   async (symptom) => {
@@ -38,10 +45,11 @@ export const updateSymptom = createAsyncThunk<Symptom, Symptom>(
   }
 );
 
-export const deleteSymptom = createAsyncThunk<void, string>(
+export const deleteSymptom = createAsyncThunk<string, string>(
   'cycle/deleteSymptom',
   async (symptomId) => {
     await cycleService.deleteSymptom(symptomId);
+    return symptomId;
   }
 );
 
@@ -94,6 +102,20 @@ const cycleSlice = createSlice({
         state.isLoading = false;
         state.error = action.error.message || 'Failed to fetch cycle history';
       })
+      // Create Cycle
+      .addCase(createCycle.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(createCycle.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.currentCycle = action.payload;
+        state.cycleHistory = [action.payload, ...state.cycleHistory];
+      })
+      .addCase(createCycle.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.error.message || 'Failed to create cycle entry';
+      })
       // Log Symptom
       .addCase(logSymptom.fulfilled, (state, action) => {
         if (state.currentCycle) {
@@ -129,7 +151,29 @@ const cycleSlice = createSlice({
       })
       // Delete Symptom
       .addCase(deleteSymptom.fulfilled, (state, action) => {
-        console.warn('Symptom deletion in state needs refinement.');
+        const symptomId = action.payload;
+
+        const removeFromCycle = (cycle: CycleData) => {
+          cycle.days = cycle.days
+            .map((day) => ({
+              ...day,
+              symptoms: day.symptoms.filter((symptom) => symptom.id !== symptomId),
+            }))
+            .filter((day) => day.symptoms.length > 0 || Boolean(day.notes));
+        };
+
+        if (state.currentCycle) {
+          removeFromCycle(state.currentCycle);
+        }
+
+        state.cycleHistory = state.cycleHistory.map((cycle) => {
+          const clonedCycle: CycleData = {
+            ...cycle,
+            days: cycle.days.map((day) => ({ ...day, symptoms: [...day.symptoms] })),
+          };
+          removeFromCycle(clonedCycle);
+          return clonedCycle;
+        });
       })
       .addCase(deleteSymptom.rejected, (state, action) => {
         state.error = action.error.message || 'Failed to delete symptom';

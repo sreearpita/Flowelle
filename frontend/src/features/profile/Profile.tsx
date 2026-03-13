@@ -50,43 +50,43 @@ const Profile: React.FC = () => {
     try {
       await dispatch(updateProfile(formData)).unwrap();
       setIsEditing(false);
-    } catch (err) {
-      console.error('Failed to update profile:', err);
+    } catch {
+      // Error handled by slice
     }
   };
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-rose-quartz"></div>
+      <div className="flex items-center justify-center py-24">
+        <div className="bloom-card flex items-center gap-3 px-6 py-4 text-ink">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-rose-quartz border-t-transparent"></div>
+          <span className="text-sm font-semibold uppercase tracking-wider">Loading profile</span>
+        </div>
       </div>
     );
   }
 
   if (!user) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-lg text-gray-600">Please log in to view your profile.</p>
-      </div>
-    );
+    return <div className="bloom-card p-10 text-center text-lg text-muted">Please log in to view your profile.</div>;
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-display font-bold text-deep-indigo mb-8">Your Profile</h1>
+    <div className="space-y-6 animate-fadeInUp">
+      <section className="bloom-card p-6 sm:p-8">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">Your profile</p>
+        <h1 className="bloom-title mt-2">Manage preferences</h1>
+      </section>
 
       {error && (
-        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-          {error}
-        </div>
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">{error}</div>
       )}
 
-      <div className="bg-white shadow rounded-lg p-6">
+      <section className="bloom-card p-6 sm:p-8">
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             <div>
-              <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
-                First Name
+              <label htmlFor="firstName" className="text-sm font-semibold text-muted">
+                First name
               </label>
               <input
                 id="firstName"
@@ -95,13 +95,13 @@ const Profile: React.FC = () => {
                 disabled={!isEditing}
                 value={formData.firstName}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-rose-quartz focus:ring-rose-quartz disabled:bg-gray-100"
+                className="flow-input disabled:cursor-not-allowed disabled:bg-[#f3f5f9]"
               />
             </div>
 
             <div>
-              <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
-                Last Name
+              <label htmlFor="lastName" className="text-sm font-semibold text-muted">
+                Last name
               </label>
               <input
                 id="lastName"
@@ -110,12 +110,12 @@ const Profile: React.FC = () => {
                 disabled={!isEditing}
                 value={formData.lastName}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-rose-quartz focus:ring-rose-quartz disabled:bg-gray-100"
+                className="flow-input disabled:cursor-not-allowed disabled:bg-[#f3f5f9]"
               />
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="email" className="text-sm font-semibold text-muted">
                 Email
               </label>
               <input
@@ -125,13 +125,13 @@ const Profile: React.FC = () => {
                 disabled={!isEditing}
                 value={formData.email}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-rose-quartz focus:ring-rose-quartz disabled:bg-gray-100"
+                className="flow-input disabled:cursor-not-allowed disabled:bg-[#f3f5f9]"
               />
             </div>
 
             <div>
-              <label htmlFor="cycleLength" className="block text-sm font-medium text-gray-700">
-                Average Cycle Length (days)
+              <label htmlFor="cycleLength" className="text-sm font-semibold text-muted">
+                Cycle length (days)
               </label>
               <input
                 id="cycleLength"
@@ -142,13 +142,13 @@ const Profile: React.FC = () => {
                 disabled={!isEditing}
                 value={formData.cycleLength}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-rose-quartz focus:ring-rose-quartz disabled:bg-gray-100"
+                className="flow-input disabled:cursor-not-allowed disabled:bg-[#f3f5f9]"
               />
             </div>
 
             <div>
-              <label htmlFor="periodLength" className="block text-sm font-medium text-gray-700">
-                Average Period Length (days)
+              <label htmlFor="periodLength" className="text-sm font-semibold text-muted">
+                Period length (days)
               </label>
               <input
                 id="periodLength"
@@ -159,11 +159,11 @@ const Profile: React.FC = () => {
                 disabled={!isEditing}
                 value={formData.periodLength}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-rose-quartz focus:ring-rose-quartz disabled:bg-gray-100"
+                className="flow-input disabled:cursor-not-allowed disabled:bg-[#f3f5f9]"
               />
             </div>
 
-            <div className="flex items-center">
+            <label className="flex items-center gap-3 rounded-xl border border-line bg-white px-4 py-3 text-sm text-ink">
               <input
                 id="birthControlUse"
                 name="birthControlUse"
@@ -171,45 +171,32 @@ const Profile: React.FC = () => {
                 disabled={!isEditing}
                 checked={formData.birthControlUse}
                 onChange={handleChange}
-                className="h-4 w-4 text-rose-quartz focus:ring-rose-quartz border-gray-300 rounded disabled:bg-gray-100"
+                className="h-4 w-4 rounded border-line text-rose-quartz focus:ring-rose-quartz disabled:cursor-not-allowed"
               />
-              <label htmlFor="birthControlUse" className="ml-2 block text-sm text-gray-700">
-                I use birth control
-              </label>
-            </div>
+              I use birth control
+            </label>
           </div>
 
-          <div className="flex justify-end space-x-3">
+          <div className="flex flex-wrap justify-end gap-3 pt-2">
             {!isEditing ? (
-              <button
-                type="button"
-                onClick={() => setIsEditing(true)}
-                className="px-4 py-2 text-sm font-medium text-white bg-rose-quartz rounded-md hover:bg-opacity-90"
-              >
-                Edit Profile
+              <button type="button" onClick={() => setIsEditing(true)} className="flow-btn-primary">
+                Edit profile
               </button>
             ) : (
               <>
-                <button
-                  type="button"
-                  onClick={() => setIsEditing(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-                >
+                <button type="button" onClick={() => setIsEditing(false)} className="flow-btn-secondary">
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-rose-quartz rounded-md hover:bg-opacity-90"
-                >
-                  Save Changes
+                <button type="submit" className="flow-btn-primary">
+                  Save changes
                 </button>
               </>
             )}
           </div>
         </form>
-      </div>
+      </section>
     </div>
   );
 };
 
-export default Profile; 
+export default Profile;

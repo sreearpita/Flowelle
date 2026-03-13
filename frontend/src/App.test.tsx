@@ -4,6 +4,6 @@ import App from './App';
 
 test('renders login heading by default', () => {
   render(<App />);
-  const headingElement = screen.getByText(/welcome back to flowelle/i);
+  const headingElement = screen.getByText(/sign in to flowelle/i);
   expect(headingElement).toBeInTheDocument();
 });

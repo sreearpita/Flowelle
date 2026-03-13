@@ -15,35 +15,56 @@ const Login: React.FC = () => {
     try {
       await dispatch(login({ email, password })).unwrap();
       navigate('/calendar');
-    } catch (err) {
-      // Error is handled by the auth slice
+    } catch {
+      // Error handled in slice
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-cream py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-display font-bold text-deep-indigo">
-            Welcome back to Flowelle
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
-            <Link to="/register" className="font-medium text-rose-quartz hover:text-opacity-90">
-              create a new account
+    <div className="flex min-h-screen items-center justify-center px-4 py-10 sm:px-8">
+      <div className="grid w-full max-w-5xl gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+        <section className="bloom-card hidden p-8 lg:block">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">Flowelle concept</p>
+          <h1 className="bloom-title mt-3 text-4xl">Understand your cycle with calm, clear visuals.</h1>
+          <p className="mt-4 text-base text-muted">
+            Track daily changes, preview upcoming events, and log symptoms in a dashboard designed for clarity.
+          </p>
+          <div className="mt-6 grid grid-cols-3 gap-3">
+            <div className="rounded-2xl bg-soft-peach p-4 text-center">
+              <p className="font-display text-2xl text-rose-quartz">Day</p>
+              <p className="text-sm font-semibold text-muted">Cycle timeline</p>
+            </div>
+            <div className="rounded-2xl bg-soft-lilac p-4 text-center">
+              <p className="font-display text-2xl text-[#9b5cf5]">LH</p>
+              <p className="text-sm font-semibold text-muted">Hormone clues</p>
+            </div>
+            <div className="rounded-2xl bg-soft-lemon p-4 text-center">
+              <p className="font-display text-2xl text-sunrise">Plan</p>
+              <p className="text-sm font-semibold text-muted">Phase insights</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="bloom-card p-7 sm:p-9 animate-fadeInUp">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">Welcome back</p>
+          <h2 className="bloom-title mt-2 text-[2rem]">Sign in to Flowelle</h2>
+          <p className="mt-2 text-sm text-muted">
+            New here?{' '}
+            <Link to="/register" className="font-bold text-rose-quartz hover:brightness-110">
+              Create your account
             </Link>
           </p>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="text-sm text-red-700">{error}</div>
-            </div>
-          )}
-          <div className="rounded-md shadow-sm -space-y-px">
+
+          <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+            {error && (
+              <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
+              </div>
+            )}
+
             <div>
-              <label htmlFor="email-address" className="sr-only">
-                Email address
+              <label htmlFor="email-address" className="text-sm font-semibold text-muted">
+                Email
               </label>
               <input
                 id="email-address"
@@ -53,12 +74,13 @@ const Login: React.FC = () => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-rose-quartz focus:border-rose-quartz focus:z-10 sm:text-sm"
+                className="flow-input"
                 placeholder="Email address"
               />
             </div>
+
             <div>
-              <label htmlFor="password" className="sr-only">
+              <label htmlFor="password" className="text-sm font-semibold text-muted">
                 Password
               </label>
               <input
@@ -69,25 +91,19 @@ const Login: React.FC = () => {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-rose-quartz focus:border-rose-quartz focus:z-10 sm:text-sm"
+                className="flow-input"
                 placeholder="Password"
               />
             </div>
-          </div>
 
-          <div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-rose-quartz hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-quartz disabled:opacity-50"
-            >
+            <button type="submit" disabled={isLoading} className="flow-btn-primary w-full">
               {isLoading ? 'Signing in...' : 'Sign in'}
             </button>
-          </div>
-        </form>
+          </form>
+        </section>
       </div>
     </div>
   );
 };
 
-export default Login; 
+export default Login;

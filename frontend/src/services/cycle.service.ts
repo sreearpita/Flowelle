@@ -23,6 +23,27 @@ const cycleService = {
     return response.data;
   },
 
+  async createCycle(data: {
+    startDate: string;
+    cycleLength: number;
+    periodLength: number;
+    notes?: string;
+  }): Promise<CycleData> {
+    const state = store.getState();
+    const userId = state.auth.user?.id;
+    if (!userId) {
+      throw new Error('User ID not found');
+    }
+    const response = await api.post<CycleData>('/cycles', {
+      userId: userId.toString(),
+      startDate: data.startDate,
+      cycleLength: data.cycleLength,
+      periodLength: data.periodLength,
+      notes: data.notes,
+    });
+    return response.data;
+  },
+
   async logSymptom(symptom: Omit<Symptom, 'id'>): Promise<Symptom> {
     const response = await api.post<Symptom>('/cycles/symptoms', symptom);
     return response.data;

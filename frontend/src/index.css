@@ -1,17 +1,95 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    --bg: #f7f5f9;
+    --ink: #1f2f46;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    color: var(--ink);
+    background:
+      radial-gradient(circle at 12% 14%, rgba(244, 210, 229, 0.35), transparent 34%),
+      radial-gradient(circle at 88% 2%, rgba(220, 233, 255, 0.35), transparent 34%),
+      radial-gradient(circle at 85% 85%, rgba(234, 220, 255, 0.28), transparent 40%),
+      var(--bg);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Sora', sans-serif;
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer components {
+  .bloom-card {
+    @apply rounded-3xl border border-line bg-white shadow-soft;
+  }
+
+  .page-title {
+    @apply font-display font-bold tracking-tight text-[1.72rem] leading-[1.1] text-ink sm:text-[2rem];
+  }
+
+  .page-subtitle {
+    @apply mt-2 text-[0.94rem] font-medium leading-6 text-muted sm:text-[0.98rem];
+  }
+
+  .section-title {
+    @apply font-display font-semibold tracking-tight text-[1.2rem] leading-[1.2] text-ink sm:text-[1.4rem];
+  }
+
+  .card-label {
+    @apply text-[0.72rem] font-bold uppercase tracking-[0.16em] text-muted;
+  }
+
+  .card-value {
+    @apply mt-1.5 font-display font-semibold tracking-tight text-[1.28rem] leading-[1.2] text-ink sm:text-[1.45rem];
+  }
+
+  .card-meta {
+    @apply mt-1 text-[0.9rem] font-medium leading-6 text-muted;
+  }
+
+  .bloom-subtitle {
+    @apply text-sm font-semibold text-muted;
+  }
+
+  .bloom-title {
+    @apply font-display text-3xl text-ink tracking-tight;
+  }
+
+  .flow-btn-primary {
+    @apply inline-flex items-center justify-center rounded-2xl bg-rose-quartz px-5 py-2.5 font-semibold text-white transition-all duration-200 hover:brightness-105 focus:outline-none focus:ring-2 focus:ring-rose-quartz/60;
+  }
+
+  .flow-btn-secondary {
+    @apply inline-flex items-center justify-center rounded-2xl border border-line bg-white px-5 py-2.5 font-semibold text-deep-indigo transition-all duration-200 hover:bg-cream focus:outline-none focus:ring-2 focus:ring-deep-indigo/20;
+  }
+
+  .flow-input {
+    @apply mt-1 block w-full rounded-xl border border-line bg-white px-3 py-2.5 text-sm text-ink shadow-sm transition focus:border-rose-quartz focus:outline-none focus:ring-2 focus:ring-rose-quartz/30;
+  }
+
+  .phase-pill {
+    @apply rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide;
+  }
+}
+
 body {
-  margin: 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background-color: theme('colors.cream');
+  overflow-x: hidden;
 }
 
 code {

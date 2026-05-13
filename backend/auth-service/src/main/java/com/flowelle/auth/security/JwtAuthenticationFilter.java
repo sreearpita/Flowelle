@@ -21,10 +21,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+    private static final String AUTH_REGISTER_PATH = "/auth/register";
+    private static final String AUTH_LOGIN_PATH = "/auth/login";
 
     public JwtAuthenticationFilter(JwtService jwtService, UserDetailsService userDetailsService) {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
+    }
+
+    @Override
+    protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
+        String path = request.getServletPath();
+        return AUTH_REGISTER_PATH.equals(path) || AUTH_LOGIN_PATH.equals(path);
     }
 
     @Override

@@ -34,6 +34,12 @@ cycles:
   service:
     url: http://localhost:8082
 
+openai:
+  api-key: ${OPENAI_API_KEY:}
+  realtime:
+    model: ${OPENAI_REALTIME_MODEL:gpt-realtime-2}
+    transcription-model: ${OPENAI_REALTIME_TRANSCRIPTION_MODEL:gpt-4o-mini-transcribe}
+
 springdoc:
   api-docs:
     path: /v3/api-docs

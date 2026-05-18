@@ -1,7 +1,14 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { format, formatDistanceToNow, parseISO } from 'date-fns';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { createCycle, getCycleHistory } from '../../store/slices/cycleSlice';
+import {
+  startPeriodVoiceLog,
+  VoiceCheckInConnection,
+  VoiceCheckInStatus,
+  VoicePeriodFlow,
+  VoicePeriodReview,
+} from '../../services/realtime.service';
 
 const CalendarHeartIcon: React.FC<{ className?: string }> = ({ className = 'h-6 w-6' }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
@@ -11,17 +18,62 @@ const CalendarHeartIcon: React.FC<{ className?: string }> = ({ className = 'h-6 
   </svg>
 );
 
+const MicIcon: React.FC<{ className?: string }> = ({ className = 'h-6 w-6' }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
+    <path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Z" />
+    <path d="M19 11a7 7 0 0 1-14 0M12 18v3M8 21h8" />
+  </svg>
+);
+
 const TrashIcon: React.FC<{ className?: string }> = ({ className = 'h-5 w-5' }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
     <path d="M3 6h18M8 6V4h8v2M7 6l1 14h8l1-14M10 11v6M14 11v6" />
   </svg>
 );
 
+type PeriodVoiceReviewForm = VoicePeriodReview & {
+  cycleLength: number;
+  periodLength: number;
+};
+
+const voiceStatusCopy: Record<VoiceCheckInStatus, string> = {
+  idle: 'Ready for a quick spoken period entry.',
+  'requesting-mic': 'Requesting microphone access...',
+  listening: 'Listening. Speak the start date, flow, and notes.',
+  processing: 'Preparing your review card...',
+  review: 'Review the period entry before saving.',
+  error: 'Voice period log needs attention.',
+};
+
+const flowOptions: Array<{ value: VoicePeriodFlow; label: string }> = [
+  { value: 'spotting', label: 'Spotting' },
+  { value: 'light', label: 'Light' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'heavy', label: 'Heavy' },
+];
+
+const formatVoiceNotes = (review: PeriodVoiceReviewForm): string | undefined => {
+  const parts = [];
+  if (review.flow) {
+    parts.push(`Flow: ${review.flow}.`);
+  }
+  if (review.notes?.trim()) {
+    parts.push(review.notes.trim());
+  }
+  return parts.length ? parts.join(' ') : undefined;
+};
+
 const LogPeriod: React.FC = () => {
   const dispatch = useAppDispatch();
   const { cycleHistory, isLoading, error } = useAppSelector((state) => state.cycle);
 
   const [showNewEntryModal, setShowNewEntryModal] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [voiceStatus, setVoiceStatus] = useState<VoiceCheckInStatus>('idle');
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+  const [voiceTranscript, setVoiceTranscript] = useState('');
+  const [voiceReview, setVoiceReview] = useState<PeriodVoiceReviewForm | null>(null);
+  const voiceConnectionRef = useRef<VoiceCheckInConnection | null>(null);
   const [formData, setFormData] = useState({
     startDate: format(new Date(), 'yyyy-MM-dd'),
     cycleLength: 28,
@@ -32,6 +84,12 @@ const LogPeriod: React.FC = () => {
   useEffect(() => {
     dispatch(getCycleHistory());
   }, [dispatch]);
+
+  useEffect(() => {
+    return () => {
+      voiceConnectionRef.current?.stop();
+    };
+  }, []);
 
   const sortedHistory = useMemo(
     () =>
@@ -63,8 +121,82 @@ const LogPeriod: React.FC = () => {
     };
   }, [sortedHistory]);
 
+  const handleStartVoiceLog = async () => {
+    setActionError(null);
+    setVoiceError(null);
+    setVoiceReview(null);
+    setVoiceTranscript('');
+
+    try {
+      voiceConnectionRef.current?.stop();
+      voiceConnectionRef.current = await startPeriodVoiceLog(
+        {
+          onStatusChange: setVoiceStatus,
+          onReview: (review) => {
+            setVoiceReview({
+              ...review,
+              cycleLength: summary.averageCycleLength || 28,
+              periodLength: summary.averagePeriodLength || 5,
+            });
+          },
+          onTranscriptChange: setVoiceTranscript,
+          onError: setVoiceError,
+        },
+        format(new Date(), 'yyyy-MM-dd')
+      );
+    } catch (error) {
+      setVoiceStatus('error');
+      setVoiceError(
+        error instanceof Error
+          ? error.message
+          : 'Unable to start voice period log. Check microphone access and try again.'
+      );
+    }
+  };
+
+  const handleFinishVoiceLog = () => {
+    voiceConnectionRef.current?.finish();
+  };
+
+  const handleCancelVoiceLog = () => {
+    voiceConnectionRef.current?.stop();
+    voiceConnectionRef.current = null;
+    setVoiceStatus('idle');
+    setVoiceError(null);
+    setVoiceTranscript('');
+    setVoiceReview(null);
+  };
+
+  const handleVoiceReviewChange = (patch: Partial<PeriodVoiceReviewForm>) => {
+    setVoiceReview((review) => (review ? { ...review, ...patch } : review));
+  };
+
+  const handleSaveVoiceReview = async () => {
+    setActionError(null);
+
+    if (!voiceReview) {
+      return;
+    }
+
+    try {
+      await dispatch(
+        createCycle({
+          startDate: voiceReview.startDate,
+          cycleLength: Number(voiceReview.cycleLength),
+          periodLength: Number(voiceReview.periodLength),
+          notes: formatVoiceNotes(voiceReview),
+        })
+      ).unwrap();
+
+      handleCancelVoiceLog();
+    } catch {
+      setActionError('Unable to save the voice period entry right now. Please review and try again.');
+    }
+  };
+
   const handleCreateEntry = async (e: React.FormEvent) => {
     e.preventDefault();
+    setActionError(null);
     try {
       await dispatch(
         createCycle({
@@ -83,7 +215,7 @@ const LogPeriod: React.FC = () => {
         notes: '',
       });
     } catch {
-      // Error handled via redux state
+      setActionError('Unable to save period entry right now. Please try again.');
     }
   };
 
@@ -101,13 +233,23 @@ const LogPeriod: React.FC = () => {
               Record cycle starts consistently to keep your predictions accurate and useful.
             </p>
           </div>
-          <button
-            onClick={() => setShowNewEntryModal(true)}
-            className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#ff4f74] to-[#8f52ff] px-6 py-2.5 text-base font-bold tracking-tight text-white shadow-soft transition hover:-translate-y-0.5 hover:brightness-105"
-          >
-            <span className="text-2xl leading-none">+</span>
-            New Entry
-          </button>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={handleStartVoiceLog}
+              disabled={voiceStatus === 'requesting-mic' || voiceStatus === 'listening' || voiceStatus === 'processing'}
+              className="inline-flex items-center gap-2 rounded-2xl border border-line bg-white px-6 py-2.5 text-base font-bold tracking-tight text-deep-indigo shadow-soft transition hover:bg-[#f4f7fb] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <MicIcon className="h-5 w-5" />
+              Voice Log
+            </button>
+            <button
+              onClick={() => setShowNewEntryModal(true)}
+              className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#ff4f74] to-[#8f52ff] px-6 py-2.5 text-base font-bold tracking-tight text-white shadow-soft transition hover:-translate-y-0.5 hover:brightness-105"
+            >
+              <span className="text-2xl leading-none">+</span>
+              New Entry
+            </button>
+          </div>
         </div>
 
         <div className="relative mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -140,8 +282,147 @@ const LogPeriod: React.FC = () => {
         </div>
       </section>
 
-      {error && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">{error}</div>
+      <section className="bloom-card p-5 sm:p-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="card-label">Hands-Free Period Logging</p>
+            <h2 className="section-title mt-1">Speak a period entry</h2>
+            <p className="card-meta">{voiceStatusCopy[voiceStatus]}</p>
+            <p className="mt-2 text-[0.86rem] font-medium text-muted">
+              Flowelle extracts period logs for review only. It is not a medical diagnostic tool.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            {voiceStatus === 'listening' && (
+              <button type="button" onClick={handleFinishVoiceLog} className="flow-btn-primary">
+                Create review
+              </button>
+            )}
+            {(voiceStatus === 'listening' || voiceStatus === 'processing' || voiceReview) && (
+              <button type="button" onClick={handleCancelVoiceLog} className="flow-btn-secondary">
+                Cancel
+              </button>
+            )}
+          </div>
+        </div>
+
+        {voiceError && (
+          <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {voiceError}
+          </div>
+        )}
+
+        {(voiceStatus === 'listening' || voiceStatus === 'processing' || voiceTranscript) && (
+          <div className="mt-4 rounded-2xl border border-line bg-white p-4">
+            <div className="flex items-center justify-between gap-3">
+              <p className="card-label">Live Transcript</p>
+              {voiceStatus === 'listening' && (
+                <span className="rounded-full bg-[#d0f1df] px-3 py-1 text-xs font-bold uppercase tracking-[0.1em] text-[#0a8d5b]">
+                  Listening
+                </span>
+              )}
+            </div>
+            <p className="mt-2 min-h-12 whitespace-pre-line text-[0.98rem] leading-relaxed text-ink">
+              {voiceTranscript || 'Your spoken words will appear here as Flowelle hears them.'}
+            </p>
+          </div>
+        )}
+
+        {voiceReview && (
+          <div className="mt-5 rounded-2xl border border-line bg-[#fbfcff] p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h3 className="section-title text-[1.1rem] sm:text-[1.2rem]">Review before saving</h3>
+                <p className="card-meta">Edit anything that was misunderstood.</p>
+              </div>
+              <div className="w-full sm:w-52">
+                <label htmlFor="voicePeriodStartDate" className="text-sm font-semibold text-muted">
+                  Start date
+                </label>
+                <input
+                  id="voicePeriodStartDate"
+                  type="date"
+                  value={voiceReview.startDate}
+                  onChange={(event) => handleVoiceReviewChange({ startDate: event.target.value })}
+                  className="flow-input"
+                />
+              </div>
+            </div>
+
+            <div className="mt-4 grid gap-3 md:grid-cols-[0.8fr_0.8fr_0.8fr_1.6fr]">
+              <div>
+                <label className="text-sm font-semibold text-muted">Flow</label>
+                <select
+                  value={voiceReview.flow || ''}
+                  onChange={(event) =>
+                    handleVoiceReviewChange({
+                      flow: event.target.value ? (event.target.value as VoicePeriodFlow) : undefined,
+                    })
+                  }
+                  className="flow-input"
+                >
+                  <option value="">Not specified</option>
+                  {flowOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-sm font-semibold text-muted">Cycle length</label>
+                <input
+                  type="number"
+                  min={21}
+                  max={35}
+                  value={voiceReview.cycleLength}
+                  onChange={(event) => handleVoiceReviewChange({ cycleLength: Number(event.target.value) })}
+                  className="flow-input"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-semibold text-muted">Period length</label>
+                <input
+                  type="number"
+                  min={2}
+                  max={10}
+                  value={voiceReview.periodLength}
+                  onChange={(event) => handleVoiceReviewChange({ periodLength: Number(event.target.value) })}
+                  className="flow-input"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-semibold text-muted">Notes</label>
+                <input
+                  type="text"
+                  value={voiceReview.notes || ''}
+                  onChange={(event) => handleVoiceReviewChange({ notes: event.target.value })}
+                  className="flow-input"
+                  placeholder="Optional"
+                />
+              </div>
+            </div>
+
+            <div className="mt-4 flex justify-end gap-3">
+              <button type="button" onClick={handleCancelVoiceLog} className="flow-btn-secondary">
+                Cancel
+              </button>
+              <button type="button" onClick={handleSaveVoiceReview} className="flow-btn-primary">
+                Save Entry
+              </button>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {(actionError || error) && (
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">
+          {actionError || error}
+        </div>
       )}
 
       <section className="grid gap-5 xl:grid-cols-[1.75fr_1fr]">

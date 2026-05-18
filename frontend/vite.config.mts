@@ -12,6 +12,10 @@ export default defineConfig({
         target: 'http://localhost:8081',
         changeOrigin: true,
       },
+      '/api/ai': {
+        target: 'http://localhost:8081',
+        changeOrigin: true,
+      },
       '/api/cycles': {
         target: 'http://localhost:8082',
         changeOrigin: true,

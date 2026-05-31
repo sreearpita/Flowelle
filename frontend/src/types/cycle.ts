@@ -28,12 +28,32 @@ export interface CyclePredictions {
   fertileWindowStart: string;
   fertileWindowEnd: string;
   ovulationDay: string;
+  confidence?: number;
+  basis?: string;
+  isPredicted?: boolean;
+}
+
+export type LogSource = 'manual' | 'voice' | 'coach';
+
+export interface DailyLog {
+  id?: string;
+  userId?: string;
+  cycleId?: string;
+  date: string;
+  periodFlow?: 'spotting' | 'light' | 'medium' | 'heavy' | '';
+  symptoms: Symptom[];
+  mood?: string;
+  energy?: number;
+  notes?: string;
+  source?: LogSource;
+  createdAt?: string;
 }
 
 export interface CycleState {
   currentCycle: CycleData | null;
   cycleHistory: CycleData[];
   predictions: CyclePredictions | null;
+  dailyLogs: DailyLog[];
   isLoading: boolean;
   error: string | null;
 }

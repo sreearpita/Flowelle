@@ -38,7 +38,7 @@ const Register: React.FC = () => {
           lastPeriodDate: formData.lastPeriodDate.toISOString().split('T')[0],
         })
       ).unwrap();
-      navigate('/calendar');
+      navigate('/today');
     } catch {
       // Error is handled by slice
     }
@@ -51,10 +51,13 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4 py-10 sm:px-8">
-      <div className="bloom-card w-full max-w-4xl p-7 sm:p-9 animate-fadeInUp">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">Create account</p>
-        <h2 className="bloom-title mt-2 text-[38px]">Start your Flowelle journey</h2>
+    <div className="flex min-h-screen items-center justify-center bg-cream px-4 py-10 sm:px-8">
+      <div className="flow-card w-full max-w-4xl p-7 sm:p-9">
+        <p className="card-label">Create account</p>
+        <h2 className="mt-2 text-3xl font-extrabold text-ink sm:text-4xl">Set up private tracking</h2>
+        <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-muted">
+          Start with your usual cycle settings. AI, voice, analytics, export, and deletion controls live in Privacy Center.
+        </p>
         <p className="mt-2 text-sm text-muted">
           Already have an account?{' '}
           <Link to="/login" className="font-bold text-rose-quartz hover:brightness-110">
@@ -182,7 +185,7 @@ const Register: React.FC = () => {
             />
           </div>
 
-          <label className="flex items-center gap-3 rounded-xl border border-line bg-white px-4 py-3 text-sm text-ink">
+          <label className="flex min-h-11 items-center gap-3 rounded-lg border border-line bg-white px-4 py-3 text-sm font-semibold text-ink">
             <input
               id="birthControlUse"
               name="birthControlUse"

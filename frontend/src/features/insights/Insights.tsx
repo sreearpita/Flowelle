@@ -1,203 +1,173 @@
-import React from 'react';
-import {
-  CategoryScale,
-  Chart as ChartJS,
-  Filler,
-  Legend,
-  LineElement,
-  LinearScale,
-  PointElement,
-  Title,
-  Tooltip,
-} from 'chart.js';
-import { Line } from 'react-chartjs-2';
-
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
-
-const labels = ['Day 1', 'Day 6', 'Day 11', 'Day 16', 'Day 21', 'Day 26'];
-
-const chartData = {
-  labels,
-  datasets: [
-    {
-      label: 'Estrogen',
-      data: [8, 45, 78, 92, 70, 40],
-      borderColor: '#e84f9f',
-      backgroundColor: 'rgba(232, 79, 159, 0.08)',
-      fill: true,
-      tension: 0.35,
-      pointRadius: 0,
-    },
-    {
-      label: 'Progesterone',
-      data: [10, 10, 10, 22, 46, 72],
-      borderColor: '#ef9b07',
-      backgroundColor: 'rgba(239, 155, 7, 0.06)',
-      fill: true,
-      tension: 0.35,
-      pointRadius: 0,
-    },
-    {
-      label: 'LH',
-      data: [10, 10, 10, 100, 10, 10],
-      borderColor: '#9b5cf5',
-      backgroundColor: 'rgba(155, 92, 245, 0.08)',
-      fill: false,
-      tension: 0.35,
-      pointRadius: 0,
-    },
-    {
-      label: 'FSH',
-      data: [35, 58, 38, 15, 15, 15],
-      borderColor: '#13a8d2',
-      backgroundColor: 'rgba(19, 168, 210, 0.06)',
-      fill: false,
-      tension: 0.35,
-      pointRadius: 0,
-    },
-  ],
-};
-
-const chartOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: {
-      position: 'bottom' as const,
-      labels: {
-        usePointStyle: true,
-        boxWidth: 10,
-        color: '#7f90a8',
-        font: {
-          size: 12,
-          weight: 700,
-        },
-      },
-    },
-  },
-  scales: {
-    x: {
-      ticks: {
-        color: '#7f90a8',
-      },
-      grid: {
-        display: false,
-      },
-    },
-    y: {
-      suggestedMin: 0,
-      suggestedMax: 100,
-      ticks: {
-        color: '#7f90a8',
-        stepSize: 25,
-      },
-      grid: {
-        color: '#eef2f7',
-      },
-    },
-  },
-};
-
-const snapshot = [
-  { name: 'Estrogen', value: 90, status: 'High', color: 'bg-rose-quartz', statusColor: 'text-sage-green' },
-  { name: 'Progesterone', value: 12, status: 'Low', color: 'bg-sunrise', statusColor: 'text-muted' },
-  { name: 'LH Surge', value: 92, status: 'High', color: 'bg-[#9b5cf5]', statusColor: 'text-sage-green' },
-];
-
-const suggestions = {
-  phase: 'Ovulation Phase',
-  subtitle: 'Peak energy & confidence',
-  cards: [
-    {
-      title: 'Diet',
-      points: [
-        'Anti-inflammatory foods',
-        'Cruciferous veggies (broccoli, kale)',
-        'Berries and antioxidant-rich fruits',
-        'Healthy fats (avocado, nuts)',
-      ],
-    },
-    {
-      title: 'Exercise',
-      points: [
-        'High-intensity interval training',
-        'Strength training at peak',
-        'Dance or spin classes',
-        'Maximize your energy window',
-      ],
-    },
-    {
-      title: 'Lifestyle',
-      points: [
-        'Schedule important meetings',
-        'Public speaking or presentations',
-        'Date nights and social events',
-        'Tackle challenging tasks',
-      ],
-    },
-    {
-      title: 'Self-Care',
-      points: [
-        'Celebrate your confidence',
-        'Express yourself creatively',
-        'Spend time in nature',
-        'Practice gratitude',
-      ],
-    },
-  ],
-};
+import React, { useEffect, useMemo } from 'react';
+import { format, parseISO } from 'date-fns';
+import { Activity, AlertTriangle, ClipboardCheck, Download, LineChart } from 'lucide-react';
+import { useAppDispatch, useAppSelector } from '../../store';
+import { getCycleHistory, getDailyLogs, getPredictions } from '../../store/slices/cycleSlice';
+import { formatDate } from '../common/cycleUi';
 
 const Insights: React.FC = () => {
+  const dispatch = useAppDispatch();
+  const { cycleHistory, dailyLogs, predictions } = useAppSelector((state) => state.cycle);
+  const { user } = useAppSelector((state) => state.auth);
+
+  useEffect(() => {
+    if (user?.id) {
+      dispatch(getCycleHistory());
+      dispatch(getPredictions());
+      dispatch(getDailyLogs(undefined));
+    }
+  }, [dispatch, user?.id]);
+
+  const stats = useMemo(() => {
+    const cycleLengths = cycleHistory.map((cycle) => Number(cycle.cycleLength || 0)).filter(Boolean);
+    const periodLengths = cycleHistory.map((cycle) => Number(cycle.periodLength || 0)).filter(Boolean);
+    const averageCycle = cycleLengths.length
+      ? Math.round(cycleLengths.reduce((sum, value) => sum + value, 0) / cycleLengths.length)
+      : user?.cycleLength || 28;
+    const averagePeriod = periodLengths.length
+      ? Math.round(periodLengths.reduce((sum, value) => sum + value, 0) / periodLengths.length)
+      : user?.periodLength || 5;
+    const variation = cycleLengths.length > 1 ? Math.max(...cycleLengths) - Math.min(...cycleLengths) : 0;
+    const symptomCounts = new Map<string, number>();
+    dailyLogs.forEach((log) => {
+      log.symptoms?.forEach((symptom) => {
+        const label = symptom.type.replace(/_/g, ' ');
+        symptomCounts.set(label, (symptomCounts.get(label) || 0) + 1);
+      });
+    });
+
+    return {
+      averageCycle,
+      averagePeriod,
+      variation,
+      logCount: dailyLogs.length,
+      periodLogCount: dailyLogs.filter((log) => Boolean(log.periodFlow)).length,
+      topSymptoms: Array.from(symptomCounts.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5),
+      latestCycle: [...cycleHistory].sort(
+        (a, b) => parseISO(b.startDate).getTime() - parseISO(a.startDate).getTime()
+      )[0],
+    };
+  }, [cycleHistory, dailyLogs, user?.cycleLength, user?.periodLength]);
+
   return (
-    <div className="space-y-6 animate-fadeInUp">
-      <div className="grid gap-5 xl:grid-cols-[2.2fr_1fr]">
-        <article className="bloom-card p-5">
-          <h2 className="section-title">Hormone Levels</h2>
-          <p className="card-meta">Predicted levels based on your cycle day</p>
-          <div className="mt-4 h-[380px]">
-            <Line data={chartData} options={chartOptions} />
+    <div className="flow-page">
+      <header>
+        <p className="card-label">Pattern review</p>
+        <h1 className="page-title">Insights</h1>
+        <p className="page-subtitle">
+          Flowelle summarizes your own logs and labels estimates clearly. It does not diagnose, prescribe, or claim hormone levels.
+        </p>
+      </header>
+
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {[
+          ['Average cycle', `${stats.averageCycle} days`, 'Based on saved cycle lengths.'],
+          ['Average period', `${stats.averagePeriod} days`, 'Based on saved period lengths.'],
+          ['Cycle variation', `${stats.variation} days`, stats.variation > 7 ? 'Variation worth monitoring.' : 'Within your recorded range.'],
+          ['Daily logs', `${stats.logCount}`, `${stats.periodLogCount} include flow.`],
+        ].map(([label, value, meta]) => (
+          <article key={label} className="flow-card p-5">
+            <p className="card-label">{label}</p>
+            <p className="card-value">{value}</p>
+            <p className="card-meta">{meta}</p>
+          </article>
+        ))}
+      </section>
+
+      <section className="grid gap-4 xl:grid-cols-[1fr_0.9fr]">
+        <article className="flow-card p-5 sm:p-6">
+          <div className="flex items-center gap-3">
+            <LineChart className="h-5 w-5 text-clinical-blue" aria-hidden="true" />
+            <h2 className="section-title">Logged pattern signals</h2>
           </div>
-        </article>
-
-        <article className="bloom-card p-5">
-          <h3 className="section-title">Today's Hormone Snapshot</h3>
-          <p className="card-meta">Day 14 predicted levels</p>
-
           <div className="mt-5 space-y-4">
-            {snapshot.map((item) => (
-              <div key={item.name}>
-                <div className="mb-2 flex items-center justify-between">
-                  <p className="text-[1.08rem] font-semibold text-ink">{item.name}</p>
-                  <p className={`text-[1.08rem] font-semibold ${item.statusColor}`}>{item.status}</p>
-                </div>
-                <div className="h-3 rounded-full bg-[#f0f3f8]">
-                  <div className={`h-3 rounded-full ${item.color}`} style={{ width: `${item.value}%` }} />
-                </div>
+            {stats.topSymptoms.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-line p-4 text-sm font-semibold text-muted">
+                No symptom pattern yet. Add symptoms across several days to build this view.
               </div>
-            ))}
+            ) : (
+              stats.topSymptoms.map(([symptom, count]) => (
+                <div key={symptom}>
+                  <div className="mb-2 flex items-center justify-between text-sm font-bold">
+                    <span className="capitalize text-ink">{symptom}</span>
+                    <span className="text-muted">{count} log{count === 1 ? '' : 's'}</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-mist">
+                    <div
+                      className="h-2 rounded-full bg-clinical-blue"
+                      style={{ width: `${Math.min(100, (count / Math.max(1, stats.logCount)) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </article>
-      </div>
 
-      <section>
-        <h2 className="page-title">✦ Lifestyle & Diet Suggestions</h2>
+        <aside className="space-y-4">
+          <article className="flow-card p-5">
+            <div className="flex items-center gap-3">
+              <Activity className="h-5 w-5 text-sage-green" aria-hidden="true" />
+              <h2 className="section-title">Prediction quality</h2>
+            </div>
+            <p className="card-value">{predictions?.confidence ? `${predictions.confidence}%` : '--'}</p>
+            <p className="card-meta">{predictions?.basis || 'Add period starts to build predictions.'}</p>
+            <div className="mt-4 rounded-lg bg-mist p-3">
+              <p className="text-sm font-extrabold text-ink">Next predicted period</p>
+              <p className="mt-1 text-sm font-semibold text-muted">{formatDate(predictions?.nextPeriod, 'MMMM d, yyyy')}</p>
+            </div>
+          </article>
 
-        <article className="bloom-card mt-4 bg-soft-peach p-5">
-          <h3 className="section-title">{suggestions.phase}</h3>
-          <p className="card-meta">{suggestions.subtitle}</p>
-        </article>
+          <article className="flow-card border-[#f1d39a] bg-[#fffaf0] p-5">
+            <div className="flex gap-3">
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-sunrise" aria-hidden="true" />
+              <div>
+                <h2 className="text-base font-extrabold text-ink">When to seek care</h2>
+                <p className="mt-2 text-sm font-semibold leading-6 text-muted">
+                  Severe pain, very heavy bleeding, fainting, infection symptoms, pregnancy concerns, or sudden changes should be discussed with a qualified healthcare professional.
+                </p>
+              </div>
+            </div>
+          </article>
+        </aside>
+      </section>
 
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
-          {suggestions.cards.map((card) => (
-            <article key={card.title} className="bloom-card p-5">
-              <h4 className="section-title">{card.title}</h4>
-              <ul className="mt-3 space-y-2 text-[0.92rem] text-muted">
-                {card.points.map((point) => (
-                  <li key={point}>• {point}</li>
-                ))}
-              </ul>
-            </article>
-          ))}
+      <section className="flow-card p-5 sm:p-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <div className="flex items-center gap-3">
+              <ClipboardCheck className="h-5 w-5 text-clinical-blue" aria-hidden="true" />
+              <h2 className="section-title">Clinician summary</h2>
+            </div>
+            <p className="card-meta">A concise, non-diagnostic summary you can export from Privacy Center.</p>
+          </div>
+          <button className="flow-btn-secondary" type="button">
+            <Download className="h-4 w-4" aria-hidden="true" />
+            Use Privacy export
+          </button>
+        </div>
+
+        <div className="mt-5 grid gap-3 md:grid-cols-3">
+          <div className="rounded-lg border border-line bg-mist p-4">
+            <p className="card-label">Latest period start</p>
+            <p className="mt-2 text-lg font-extrabold text-ink">
+              {stats.latestCycle ? format(parseISO(stats.latestCycle.startDate), 'MMM d, yyyy') : '--'}
+            </p>
+          </div>
+          <div className="rounded-lg border border-line bg-mist p-4">
+            <p className="card-label">Common symptoms</p>
+            <p className="mt-2 text-sm font-bold leading-6 text-ink">
+              {stats.topSymptoms.length ? stats.topSymptoms.map(([symptom]) => symptom).join(', ') : 'Not enough data'}
+            </p>
+          </div>
+          <div className="rounded-lg border border-line bg-mist p-4">
+            <p className="card-label">Recorded range</p>
+            <p className="mt-2 text-sm font-bold leading-6 text-ink">
+              {cycleHistory.length} cycle{cycleHistory.length === 1 ? '' : 's'} · {dailyLogs.length} daily log{dailyLogs.length === 1 ? '' : 's'}
+            </p>
+          </div>
         </div>
       </section>
     </div>

@@ -6,12 +6,32 @@ export type User = {
   cycleLength: number;
   periodLength: number;
   birthControlUse: boolean;
-  createdAt: string;
+  createdAt?: string;
+};
+
+export type PrivacySettings = {
+  aiCoachEnabled: boolean;
+  voiceProcessingEnabled: boolean;
+  analyticsOptIn: boolean;
+  notificationsEnabled: boolean;
+  reminderTime?: string | null;
+  exportRequestedAt?: string | null;
+  deleteRequestedAt?: string | null;
+};
+
+export type DataExport = {
+  generatedAt: string;
+  profile: User;
+  privacy: PrivacySettings;
+  cycleData: unknown;
+  exportNotice: string;
 };
 
 export type AuthState = {
   user: User | null;
   token: string | null;
+  privacy: PrivacySettings | null;
+  exportData: DataExport | null;
   isLoading: boolean;
   error: string | null;
 };

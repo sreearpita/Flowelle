@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface CycleRepository extends JpaRepository<Cycle, Long> {
     List<Cycle> findByUserId(Long userId);
+
+    void deleteByUserId(Long userId);
 } 

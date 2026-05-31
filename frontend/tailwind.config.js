@@ -6,26 +6,29 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        'deep-indigo': '#1f2f46',
-        'rose-quartz': '#e84f9f',
-        'sage-green': '#22b983',
-        'cream': '#f7f5f9',
-        'sunrise': '#f1b329',
-        'mist': '#f9eef4',
-        'ink': '#1f2f46',
-        'muted': '#7f90a8',
-        'line': '#e7ebf2',
-        'soft-lilac': '#f2ecfb',
-        'soft-peach': '#fbeff2',
-        'soft-lemon': '#f8f2dc',
-        'soft-cyan': '#e8f5fb',
+        'deep-indigo': '#17233a',
+        'rose-quartz': '#c9476d',
+        'sage-green': '#1d8f6f',
+        'cream': '#f8f7f4',
+        'sunrise': '#b77812',
+        'mist': '#eef4f3',
+        'ink': '#17233a',
+        'muted': '#607084',
+        'line': '#dce4e8',
+        'soft-lilac': '#eef0f6',
+        'soft-peach': '#f7ebe7',
+        'soft-lemon': '#f7f0d8',
+        'soft-cyan': '#e8f3f4',
+        'clinical-blue': '#2d6f8f',
+        'surface': '#ffffff',
+        'danger': '#b4233c',
       },
       fontFamily: {
         'display': ['Sora', 'sans-serif'],
         'body': ['Plus Jakarta Sans', 'sans-serif'],
       },
       boxShadow: {
-        soft: '0 10px 30px rgba(31, 47, 70, 0.08)',
+        soft: '0 10px 28px rgba(23, 35, 58, 0.08)',
       },
       keyframes: {
         fadeInUp: {

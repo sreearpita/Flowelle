@@ -14,40 +14,40 @@ const Login: React.FC = () => {
     e.preventDefault();
     try {
       await dispatch(login({ email, password })).unwrap();
-      navigate('/calendar');
+      navigate('/today');
     } catch {
       // Error handled in slice
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4 py-10 sm:px-8">
+    <div className="flex min-h-screen items-center justify-center bg-cream px-4 py-10 sm:px-8">
       <div className="grid w-full max-w-5xl gap-5 lg:grid-cols-[1.1fr_0.9fr]">
-        <section className="bloom-card hidden p-8 lg:block">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">Flowelle concept</p>
-          <h1 className="bloom-title mt-3 text-4xl">Understand your cycle with calm, clear visuals.</h1>
-          <p className="mt-4 text-base text-muted">
-            Track daily changes, preview upcoming events, and log symptoms in a dashboard designed for clarity.
+        <section className="flow-card hidden p-8 lg:block">
+          <p className="card-label">Flowelle</p>
+          <h1 className="mt-3 text-4xl font-extrabold leading-tight text-ink">Private cycle tracking with clear uncertainty.</h1>
+          <p className="mt-4 text-base font-medium leading-7 text-muted">
+            Log facts, understand predictions, and control AI, voice, export, and deletion from one privacy-first workspace.
           </p>
           <div className="mt-6 grid grid-cols-3 gap-3">
-            <div className="rounded-2xl bg-soft-peach p-4 text-center">
-              <p className="font-display text-2xl text-rose-quartz">Day</p>
-              <p className="text-sm font-semibold text-muted">Cycle timeline</p>
+            <div className="rounded-lg bg-soft-cyan p-4">
+              <p className="text-2xl font-extrabold text-clinical-blue">Facts</p>
+              <p className="text-sm font-semibold text-muted">Logged entries</p>
             </div>
-            <div className="rounded-2xl bg-soft-lilac p-4 text-center">
-              <p className="font-display text-2xl text-[#9b5cf5]">LH</p>
-              <p className="text-sm font-semibold text-muted">Hormone clues</p>
+            <div className="rounded-lg bg-soft-lemon p-4">
+              <p className="text-2xl font-extrabold text-sunrise">Est.</p>
+              <p className="text-sm font-semibold text-muted">Predictions</p>
             </div>
-            <div className="rounded-2xl bg-soft-lemon p-4 text-center">
-              <p className="font-display text-2xl text-sunrise">Plan</p>
-              <p className="text-sm font-semibold text-muted">Phase insights</p>
+            <div className="rounded-lg bg-mist p-4">
+              <p className="text-2xl font-extrabold text-sage-green">You</p>
+              <p className="text-sm font-semibold text-muted">Data control</p>
             </div>
           </div>
         </section>
 
-        <section className="bloom-card p-7 sm:p-9 animate-fadeInUp">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">Welcome back</p>
-          <h2 className="bloom-title mt-2 text-[2rem]">Sign in to Flowelle</h2>
+        <section className="flow-card p-7 sm:p-9">
+          <p className="card-label">Welcome back</p>
+          <h2 className="mt-2 text-3xl font-extrabold text-ink">Sign in to Flowelle</h2>
           <p className="mt-2 text-sm text-muted">
             New here?{' '}
             <Link to="/register" className="font-bold text-rose-quartz hover:brightness-110">

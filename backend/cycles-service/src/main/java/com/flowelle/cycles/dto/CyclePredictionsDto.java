@@ -14,4 +14,7 @@ public class CyclePredictionsDto {
     private String fertileWindowStart;
     private String fertileWindowEnd;
     private String ovulationDay;
+    private Integer confidence;
+    private String basis;
+    private Boolean isPredicted;
 } 

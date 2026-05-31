@@ -13,6 +13,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 
 @Service
@@ -58,29 +59,37 @@ public class OpenAiRealtimeService {
     }
 
     private String normalizeMode(String mode) {
-        return "period".equalsIgnoreCase(mode) ? "period" : "symptom";
+        if ("period".equalsIgnoreCase(mode)) {
+            return "period";
+        }
+        if ("coach".equalsIgnoreCase(mode)) {
+            return "coach";
+        }
+        return "symptom";
     }
 
     private Map<String, Object> sessionRequest(String mode, String currentDate) {
-        return Map.of(
-                "session", Map.of(
-                        "type", "realtime",
-                        "model", realtimeModel,
-                        "instructions", instructions(mode, currentDate),
-                        "output_modalities", List.of("text"),
-                        "audio", Map.of(
-                                "input", Map.of(
-                                        "transcription", Map.of(
-                                                "model", transcriptionModel,
-                                                "language", "en"
-                                        ),
-                                        "turn_detection", Map.of("type", "server_vad")
-                                )
+        Map<String, Object> session = new HashMap<>();
+        session.put("type", "realtime");
+        session.put("model", realtimeModel);
+        session.put("instructions", instructions(mode, currentDate));
+        session.put("output_modalities", List.of("text"));
+        session.put("audio", Map.of(
+                "input", Map.of(
+                        "transcription", Map.of(
+                                "model", transcriptionModel,
+                                "language", "en"
                         ),
-                        "tool_choice", "auto",
-                        "tools", List.of("period".equals(mode) ? periodLogTool() : symptomLogTool())
+                        "turn_detection", Map.of("type", "server_vad")
                 )
-        );
+        ));
+
+        if (!"coach".equals(mode)) {
+            session.put("tool_choice", "auto");
+            session.put("tools", List.of("period".equals(mode) ? periodLogTool() : symptomLogTool()));
+        }
+
+        return Map.of("session", session);
     }
 
     private Map<String, Object> symptomLogTool() {
@@ -171,6 +180,9 @@ public class OpenAiRealtimeService {
         if ("period".equals(mode)) {
             return periodInstructions(currentDate);
         }
+        if ("coach".equals(mode)) {
+            return coachInstructions(currentDate);
+        }
 
         return """
                 You are Flowelle Voice Check-In. You only help extract menstrual wellness symptom logs for user review.
@@ -196,6 +208,22 @@ public class OpenAiRealtimeService {
                 If the user mentions flow, normalize it to one of: light, medium, heavy, spotting.
                 Put user notes such as cramps, timing, or context in notes. Do not include medical advice.
                 Do not save anything; the app will show a review card first.
+                """.formatted(dateContext);
+    }
+
+    private String coachInstructions(String currentDate) {
+        String dateContext = currentDate == null || currentDate.isBlank()
+                ? "Use general language for relative dates."
+                : "Today's date is " + currentDate + ". Resolve relative dates such as yesterday using this date.";
+
+        return """
+                You are Flowelle Private Coach. You help users understand menstrual cycle patterns, privacy controls, and logging habits.
+                You are not a clinician, diagnostic tool, contraceptive tool, or treatment planner.
+                Do not diagnose, prescribe, or claim certainty about pregnancy, fertility, disease, or hormone levels.
+                If the user describes severe pain, heavy bleeding, fainting, pregnancy concerns, infection symptoms, or urgent risk, recommend contacting a qualified healthcare professional or emergency care.
+                Keep responses brief, plain-language, and grounded in education. Never say that data has been saved.
+                If a user wants to log something, summarize it as a draft for review instead of claiming to save it.
+                %s
                 """.formatted(dateContext);
     }
 }

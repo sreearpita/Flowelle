@@ -18,6 +18,7 @@ public class PredictionService {
         Cycle cycle = cycleRepository.findByUserId(userId).stream()
                 .max((c1, c2) -> c1.getStartDate().compareTo(c2.getStartDate()))
                 .orElseThrow(() -> new RuntimeException("No cycles found for user"));
+        int cycleCount = cycleRepository.findByUserId(userId).size();
 
         LocalDate start = cycle.getStartDate();
         int cycleLen = cycle.getCycleLength() != null ? cycle.getCycleLength() : 28;
@@ -36,6 +37,9 @@ public class PredictionService {
                 .ovulationDay(ovulationDay.toString())
                 .fertileWindowStart(fertileStart.toString())
                 .fertileWindowEnd(fertileEnd.toString())
+                .confidence(Math.min(90, 45 + (cycleCount * 10)))
+                .basis(cycleCount <= 1 ? "Based on your latest cycle length" : "Based on " + cycleCount + " logged cycles")
+                .isPredicted(true)
                 .build();
     }
 } 

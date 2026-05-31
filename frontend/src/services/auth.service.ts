@@ -1,5 +1,5 @@
 import api from './api';
-import { User, LoginCredentials, RegisterData } from '../types/auth';
+import { DataExport, PrivacySettings, User, LoginCredentials, RegisterData } from '../types/auth';
 
 interface AuthResponse {
   user: User;
@@ -36,6 +36,26 @@ const authService = {
 
   async updateProfile(profileData: Partial<User>): Promise<User> {
     const response = await api.put<User>('/auth/me', profileData);
+    return response.data;
+  },
+
+  async getPrivacySettings(): Promise<PrivacySettings> {
+    const response = await api.get<PrivacySettings>('/auth/me/privacy');
+    return response.data;
+  },
+
+  async updatePrivacySettings(settings: Partial<PrivacySettings>): Promise<PrivacySettings> {
+    const response = await api.put<PrivacySettings>('/auth/me/privacy', settings);
+    return response.data;
+  },
+
+  async exportData(): Promise<DataExport> {
+    const response = await api.get<DataExport>('/auth/me/export');
+    return response.data;
+  },
+
+  async deleteData(): Promise<PrivacySettings> {
+    const response = await api.delete<PrivacySettings>('/auth/me/data');
     return response.data;
   },
 };

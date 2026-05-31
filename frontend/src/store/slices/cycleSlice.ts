@@ -1,11 +1,12 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { CycleState, CycleData, CycleDay, Symptom, CyclePredictions } from '../../types/cycle';
+import { CycleState, CycleData, CycleDay, DailyLog, Symptom, CyclePredictions } from '../../types/cycle';
 import cycleService from '../../services/cycle.service';
 
 const initialState: CycleState = {
   currentCycle: null,
   cycleHistory: [],
   predictions: null,
+  dailyLogs: [],
   isLoading: false,
   error: null,
 };
@@ -64,6 +65,20 @@ export const getPredictions = createAsyncThunk<CyclePredictions>(
   'cycle/getPredictions',
   async () => {
     return await cycleService.predictNextPeriod();
+  }
+);
+
+export const getDailyLogs = createAsyncThunk<DailyLog[], { from?: string; to?: string } | undefined>(
+  'cycle/getDailyLogs',
+  async (range) => {
+    return await cycleService.getDailyLogs(range);
+  }
+);
+
+export const saveDailyLog = createAsyncThunk<DailyLog, DailyLog>(
+  'cycle/saveDailyLog',
+  async (log) => {
+    return await cycleService.saveDailyLog(log);
   }
 );
 
@@ -196,6 +211,22 @@ const cycleSlice = createSlice({
       })
       .addCase(getPredictions.rejected, (state, action) => {
         state.error = action.error.message || 'Failed to fetch predictions';
+      })
+      // Daily Logs
+      .addCase(getDailyLogs.fulfilled, (state, action) => {
+        state.dailyLogs = action.payload;
+      })
+      .addCase(getDailyLogs.rejected, (state, action) => {
+        state.error = action.error.message || 'Failed to fetch daily logs';
+      })
+      .addCase(saveDailyLog.fulfilled, (state, action) => {
+        state.dailyLogs = [
+          action.payload,
+          ...state.dailyLogs.filter((log) => log.id !== action.payload.id),
+        ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      })
+      .addCase(saveDailyLog.rejected, (state, action) => {
+        state.error = action.error.message || 'Failed to save daily log';
       });
   },
 });

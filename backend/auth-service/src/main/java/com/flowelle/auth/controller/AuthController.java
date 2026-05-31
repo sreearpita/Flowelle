@@ -1,7 +1,9 @@
 package com.flowelle.auth.controller;
 
 import com.flowelle.auth.dto.AuthResponse;
+import com.flowelle.auth.dto.DataExportDto;
 import com.flowelle.auth.dto.LoginRequest;
+import com.flowelle.auth.dto.PrivacySettingsDto;
 import com.flowelle.auth.dto.RegisterRequest;
 import com.flowelle.auth.dto.UserResponse;
 import com.flowelle.auth.dto.UpdateProfileRequest;
@@ -13,7 +15,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -84,6 +88,64 @@ public class AuthController {
         if (principal instanceof com.flowelle.auth.model.User user) {
             var updatedUser = authService.updateProfile(user.getId(), request);
             return ResponseEntity.ok(updatedUser);
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    @GetMapping("/me/privacy")
+    @Operation(
+        summary = "Get privacy settings",
+        description = "Retrieve consent and privacy controls for the current user"
+    )
+    public ResponseEntity<PrivacySettingsDto> getPrivacySettings() {
+        var principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof com.flowelle.auth.model.User user) {
+            return ResponseEntity.ok(authService.getPrivacySettings(user.getId()));
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    @PutMapping("/me/privacy")
+    @Operation(
+        summary = "Update privacy settings",
+        description = "Update consent and privacy controls for the current user"
+    )
+    public ResponseEntity<PrivacySettingsDto> updatePrivacySettings(
+            @RequestBody PrivacySettingsDto request
+    ) {
+        var principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof com.flowelle.auth.model.User user) {
+            return ResponseEntity.ok(authService.updatePrivacySettings(user.getId(), request));
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    @GetMapping("/me/export")
+    @Operation(
+        summary = "Export user data",
+        description = "Export account, privacy, cycle, log, symptom, and prediction data available for the current user"
+    )
+    public ResponseEntity<DataExportDto> exportUserData(
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader
+    ) {
+        var principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof com.flowelle.auth.model.User user) {
+            return ResponseEntity.ok(authService.exportUserData(user.getId(), authorizationHeader));
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    @DeleteMapping("/me/data")
+    @Operation(
+        summary = "Request user data deletion",
+        description = "Delete cycle-service health data and record the account deletion request timestamp"
+    )
+    public ResponseEntity<PrivacySettingsDto> deleteUserData(
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader
+    ) {
+        var principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof com.flowelle.auth.model.User user) {
+            return ResponseEntity.ok(authService.requestDataDeletion(user.getId(), authorizationHeader));
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }

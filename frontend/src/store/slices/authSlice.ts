@@ -1,10 +1,12 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { AuthState, LoginCredentials, RegisterData, User } from '../../types/auth';
+import { AuthState, DataExport, LoginCredentials, PrivacySettings, RegisterData, User } from '../../types/auth';
 import authService from '../../services/auth.service';
 
 const initialState: AuthState = {
   user: null,
   token: authService.getStoredToken(),
+  privacy: null,
+  exportData: null,
   isLoading: false,
   error: null,
 };
@@ -41,6 +43,34 @@ export const updateProfile = createAsyncThunk<User, Partial<User>>(
   'auth/updateProfile',
   async (profileData) => {
     return await authService.updateProfile(profileData);
+  }
+);
+
+export const getPrivacySettings = createAsyncThunk<PrivacySettings>(
+  'auth/getPrivacySettings',
+  async () => {
+    return await authService.getPrivacySettings();
+  }
+);
+
+export const updatePrivacySettings = createAsyncThunk<PrivacySettings, Partial<PrivacySettings>>(
+  'auth/updatePrivacySettings',
+  async (settings) => {
+    return await authService.updatePrivacySettings(settings);
+  }
+);
+
+export const exportUserData = createAsyncThunk<DataExport>(
+  'auth/exportUserData',
+  async () => {
+    return await authService.exportData();
+  }
+);
+
+export const deleteUserData = createAsyncThunk<PrivacySettings>(
+  'auth/deleteUserData',
+  async () => {
+    return await authService.deleteData();
   }
 );
 
@@ -86,6 +116,8 @@ const authSlice = createSlice({
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
         state.token = null;
+        state.privacy = null;
+        state.exportData = null;
       })
       // Get Current User
       .addCase(getCurrentUser.pending, (state) => {
@@ -112,6 +144,31 @@ const authSlice = createSlice({
       .addCase(updateProfile.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.error.message || 'Failed to update profile';
+      })
+      // Privacy
+      .addCase(getPrivacySettings.fulfilled, (state, action) => {
+        state.privacy = action.payload;
+      })
+      .addCase(getPrivacySettings.rejected, (state, action) => {
+        state.error = action.error.message || 'Failed to fetch privacy settings';
+      })
+      .addCase(updatePrivacySettings.fulfilled, (state, action) => {
+        state.privacy = action.payload;
+      })
+      .addCase(updatePrivacySettings.rejected, (state, action) => {
+        state.error = action.error.message || 'Failed to update privacy settings';
+      })
+      .addCase(exportUserData.fulfilled, (state, action) => {
+        state.exportData = action.payload;
+      })
+      .addCase(exportUserData.rejected, (state, action) => {
+        state.error = action.error.message || 'Failed to export data';
+      })
+      .addCase(deleteUserData.fulfilled, (state, action) => {
+        state.privacy = action.payload;
+      })
+      .addCase(deleteUserData.rejected, (state, action) => {
+        state.error = action.error.message || 'Failed to delete data';
       });
   },
 });

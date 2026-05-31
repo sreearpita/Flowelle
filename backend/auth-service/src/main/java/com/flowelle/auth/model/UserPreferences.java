@@ -38,8 +38,26 @@ public class UserPreferences {
     @Builder.Default
     private Boolean notificationsEnabled = true;
 
+    @Column(name = "ai_coach_enabled")
+    @Builder.Default
+    private Boolean aiCoachEnabled = false;
+
+    @Column(name = "voice_processing_enabled")
+    @Builder.Default
+    private Boolean voiceProcessingEnabled = false;
+
+    @Column(name = "analytics_opt_in")
+    @Builder.Default
+    private Boolean analyticsOptIn = false;
+
     @Column(name = "reminder_time")
     private LocalTime reminderTime;
+
+    @Column(name = "export_requested_at")
+    private LocalDateTime exportRequestedAt;
+
+    @Column(name = "delete_requested_at")
+    private LocalDateTime deleteRequestedAt;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

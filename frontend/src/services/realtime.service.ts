@@ -265,7 +265,7 @@ const getEphemeralKey = (response: RealtimeSessionResponse): string => {
 };
 
 type RealtimeSessionRequest = {
-  mode?: 'symptom' | 'period';
+  mode?: 'symptom' | 'period' | 'coach';
   currentDate?: string;
 };
 
@@ -432,3 +432,7 @@ export const startPeriodVoiceLog = async (
       'Extract the spoken period start entry into prepare_period_log. Use the provided current date to resolve relative dates.',
     errorLabel: 'Voice period log',
   });
+
+export const createCoachRealtimeSession = async (currentDate: string): Promise<void> => {
+  await createRealtimeSession({ mode: 'coach', currentDate });
+};

@@ -6,13 +6,14 @@ import { store } from './store'; // Removed persistor import
 import Layout from './components/layout/Layout';
 import PrivateRoute from './components/auth/PrivateRoute';
 import { useAppDispatch, useAppSelector } from './store';
-import { getCurrentUser } from './store/slices/authSlice';
+import { getCurrentUser, getPrivacySettings } from './store/slices/authSlice';
 import Login from './features/auth/Login';
 import Register from './features/auth/Register';
 import Calendar from './features/calendar/Calendar';
-import LogPeriod from './features/log-period/LogPeriod';
-import Symptoms from './features/symptoms/Symptoms';
-// import Home from './features/home/Home'; // Remove unused import
+import Today from './features/today/Today';
+import Log from './features/log/Log';
+import Coach from './features/coach/Coach';
+import Privacy from './features/privacy/Privacy';
 
 // Lazy load pages
 const Insights = React.lazy(() => import('./features/insights/Insights'));
@@ -27,6 +28,7 @@ const AppContent: React.FC = () => {
   useEffect(() => {
     if (token) {
       dispatch(getCurrentUser());
+      dispatch(getPrivacySettings());
     }
   }, [dispatch, token]);
 
@@ -42,8 +44,8 @@ const AppContent: React.FC = () => {
       }
     >
       <Routes>
-        <Route path="/login" element={token ? <Navigate to="/calendar" replace /> : <Login />} />
-        <Route path="/register" element={token ? <Navigate to="/calendar" replace /> : <Register />} />
+        <Route path="/login" element={token ? <Navigate to="/today" replace /> : <Login />} />
+        <Route path="/register" element={token ? <Navigate to="/today" replace /> : <Register />} />
         
         <Route
           path="/"
@@ -53,13 +55,17 @@ const AppContent: React.FC = () => {
             </PrivateRoute>
           }
         >
-          <Route index element={<Navigate to="/calendar" replace />} />
+          <Route index element={<Navigate to="/today" replace />} />
+          <Route path="today" element={<Today />} />
+          <Route path="log" element={<Log />} />
           <Route path="calendar" element={<Calendar />} />
-          <Route path="log-period" element={<LogPeriod />} />
-          <Route path="symptoms" element={<Symptoms />} />
+          <Route path="log-period" element={<Navigate to="/log" replace />} />
+          <Route path="symptoms" element={<Navigate to="/log" replace />} />
           <Route path="insights" element={<Insights />} />
+          <Route path="coach" element={<Coach />} />
           <Route path="library" element={<Library />} />
           <Route path="community" element={<Community />} />
+          <Route path="privacy" element={<Privacy />} />
           <Route path="profile" element={<Profile />} />
         </Route>
       </Routes>

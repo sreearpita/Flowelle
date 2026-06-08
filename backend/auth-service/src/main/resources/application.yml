@@ -34,6 +34,11 @@ cycles:
   service:
     url: http://localhost:8082
 
+aif:
+  callback:
+    key-id: ${AIF_CALLBACK_KEY_ID:dev-v1}
+    secret: ${AIF_CALLBACK_SECRET:dev-aif-tool-secret}
+
 openai:
   api-key: ${OPENAI_API_KEY:}
   realtime:

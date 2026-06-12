@@ -6,6 +6,7 @@ import com.flowelle.cycles.dto.FlowelleCycleSummaryResponse;
 import com.flowelle.cycles.security.AifCallbackUnauthorizedException;
 import com.flowelle.cycles.security.AifCallbackVerifier;
 import com.flowelle.cycles.service.AifCycleToolService;
+import com.flowelle.cycles.support.ContractFixtures;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -27,7 +28,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc(addFilters = false)
 class AifToolControllerTest {
     private static final String REQUEST_ID = "00000000-0000-0000-0000-000000000001";
-    private static final String SESSION_ID = "00000000-0000-0000-0000-000000000002";
 
     @Autowired
     private MockMvc mockMvc;
@@ -39,7 +39,7 @@ class AifToolControllerTest {
     private AifCycleToolService aifCycleToolService;
 
     @Test
-    void cycleSummaryReturnsBoundedFactsForValidSignedRequest() throws Exception {
+    void cycleSummaryReturnsBoundedFactsForSharedRequestFixture() throws Exception {
         when(aifCycleToolService.buildCycleSummary(any())).thenReturn(Optional.of(new FlowelleCycleSummaryResponse(
                 "2026-06-20",
                 "2026-06-01",
@@ -56,11 +56,12 @@ class AifToolControllerTest {
         mockMvc.perform(post("/api/aif/tools/cycle-summary")
                         .headers(validHeaders())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(validBody("cycle-summary", "cycle:read")))
+                        .content(ContractFixtures.read("/contracts/aif/cycle-summary-request.json")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("OK"))
                 .andExpect(jsonPath("$.facts.nextPeriod").value("2026-06-20"))
-                .andExpect(jsonPath("$.facts.cycleLength").value(28));
+                .andExpect(jsonPath("$.facts.cycleLength").value(28))
+                .andExpect(jsonPath("$.userExplanation").value("I used your Flowelle cycle summary."));
     }
 
     @Test
@@ -82,9 +83,49 @@ class AifToolControllerTest {
         mockMvc.perform(post("/api/aif/tools/cycle-summary")
                         .headers(validHeaders())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(validBody("cycle-summary", "cycle:read")))
+                        .content(ContractFixtures.read("/contracts/aif/cycle-summary-request.json")))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error").value("Invalid AI-Friend callback signature"));
+    }
+
+    @Test
+    void cycleSummaryRejectsExpiredTimestamp() throws Exception {
+        doThrow(new AifCallbackUnauthorizedException("Expired AI-Friend callback timestamp"))
+                .when(verifier)
+                .verify(anyString(), anyString(), anyString(), anyString());
+
+        mockMvc.perform(post("/api/aif/tools/cycle-summary")
+                        .headers(validHeaders())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(ContractFixtures.read("/contracts/aif/cycle-summary-request.json")))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("Expired AI-Friend callback timestamp"));
+    }
+
+    @Test
+    void cycleSummaryRejectsRequestIdMismatch() throws Exception {
+        HttpHeaders headers = validHeaders();
+        headers.set(AifCallbackVerifier.REQUEST_ID_HEADER, "00000000-0000-0000-0000-000000009999");
+
+        mockMvc.perform(post("/api/aif/tools/cycle-summary")
+                        .headers(headers)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(ContractFixtures.read("/contracts/aif/cycle-summary-request.json")))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("AI-Friend callback request id mismatch"));
+    }
+
+    @Test
+    void cycleSummaryRejectsTenantMismatch() throws Exception {
+        HttpHeaders headers = validHeaders();
+        headers.set(AifCallbackVerifier.TENANT_HEADER, "other-tenant");
+
+        mockMvc.perform(post("/api/aif/tools/cycle-summary")
+                        .headers(headers)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(ContractFixtures.read("/contracts/aif/cycle-summary-request.json")))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("AI-Friend callback tenant mismatch"));
     }
 
     @Test
@@ -94,7 +135,7 @@ class AifToolControllerTest {
         mockMvc.perform(post("/api/aif/tools/cycle-summary")
                         .headers(validHeaders())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(validBody("cycle-summary", "cycle:read")))
+                        .content(ContractFixtures.read("/contracts/aif/cycle-summary-request.json")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("NO_DATA"))
                 .andExpect(jsonPath("$.facts").isEmpty());
@@ -115,13 +156,13 @@ class AifToolControllerTest {
                 {
                   "requestId": "%s",
                   "tenantSlug": "demo",
-                  "externalUserId": "123",
-                  "sessionId": "%s",
+                  "externalUserId": "flowelle-user-1",
+                  "sessionId": "00000000-0000-0000-0000-000000000002",
                   "toolName": "%s",
                   "scopes": ["%s"],
                   "locale": "en-US",
                   "parameters": {}
                 }
-                """.formatted(REQUEST_ID, SESSION_ID, toolName, scope);
+                """.formatted(REQUEST_ID, toolName, scope);
     }
 }

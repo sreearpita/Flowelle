@@ -7,6 +7,7 @@ import com.flowelle.auth.security.AifCallbackUnauthorizedException;
 import com.flowelle.auth.security.AifCallbackVerifier;
 import com.flowelle.auth.security.JwtService;
 import com.flowelle.auth.service.AifPreferencesToolService;
+import com.flowelle.auth.support.ContractFixtures;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -28,8 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(AifToolController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class AifToolControllerTest {
-    private static final String REQUEST_ID = "00000000-0000-0000-0000-000000000001";
-    private static final String SESSION_ID = "00000000-0000-0000-0000-000000000002";
+    private static final String REQUEST_ID = "00000000-0000-0000-0000-000000000003";
 
     @Autowired
     private MockMvc mockMvc;
@@ -47,7 +47,7 @@ class AifToolControllerTest {
     private UserDetailsService userDetailsService;
 
     @Test
-    void userPreferencesReturnsBoundedFactsForValidSignedRequest() throws Exception {
+    void userPreferencesReturnsBoundedFactsForSharedRequestFixture() throws Exception {
         when(aifPreferencesToolService.buildPreferences(any())).thenReturn(Optional.of(new FlowelleUserPreferencesResponse(
                 28,
                 5,
@@ -62,11 +62,12 @@ class AifToolControllerTest {
         mockMvc.perform(post("/aif/tools/user-preferences")
                         .headers(validHeaders())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(validBody("user-preferences", "preferences:read")))
+                        .content(ContractFixtures.read("/contracts/aif/user-preferences-request.json")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("OK"))
                 .andExpect(jsonPath("$.facts.cycleLength").value(28))
-                .andExpect(jsonPath("$.facts.notificationsEnabled").value(true));
+                .andExpect(jsonPath("$.facts.notificationsEnabled").value(true))
+                .andExpect(jsonPath("$.userExplanation").value("I used your Flowelle preferences."));
     }
 
     @Test
@@ -88,9 +89,49 @@ class AifToolControllerTest {
         mockMvc.perform(post("/aif/tools/user-preferences")
                         .headers(validHeaders())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(validBody("user-preferences", "preferences:read")))
+                        .content(ContractFixtures.read("/contracts/aif/user-preferences-request.json")))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error").value("Invalid AI-Friend callback signature"));
+    }
+
+    @Test
+    void userPreferencesRejectsExpiredTimestamp() throws Exception {
+        doThrow(new AifCallbackUnauthorizedException("Expired AI-Friend callback timestamp"))
+                .when(verifier)
+                .verify(anyString(), anyString(), anyString(), anyString());
+
+        mockMvc.perform(post("/aif/tools/user-preferences")
+                        .headers(validHeaders())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(ContractFixtures.read("/contracts/aif/user-preferences-request.json")))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("Expired AI-Friend callback timestamp"));
+    }
+
+    @Test
+    void userPreferencesRejectsRequestIdMismatch() throws Exception {
+        HttpHeaders headers = validHeaders();
+        headers.set(AifCallbackVerifier.REQUEST_ID_HEADER, "00000000-0000-0000-0000-000000009999");
+
+        mockMvc.perform(post("/aif/tools/user-preferences")
+                        .headers(headers)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(ContractFixtures.read("/contracts/aif/user-preferences-request.json")))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("AI-Friend callback request id mismatch"));
+    }
+
+    @Test
+    void userPreferencesRejectsTenantMismatch() throws Exception {
+        HttpHeaders headers = validHeaders();
+        headers.set(AifCallbackVerifier.TENANT_HEADER, "other-tenant");
+
+        mockMvc.perform(post("/aif/tools/user-preferences")
+                        .headers(headers)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(ContractFixtures.read("/contracts/aif/user-preferences-request.json")))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("AI-Friend callback tenant mismatch"));
     }
 
     @Test
@@ -100,7 +141,7 @@ class AifToolControllerTest {
         mockMvc.perform(post("/aif/tools/user-preferences")
                         .headers(validHeaders())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(validBody("user-preferences", "preferences:read")))
+                        .content(ContractFixtures.read("/contracts/aif/user-preferences-request.json")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("NO_DATA"))
                 .andExpect(jsonPath("$.facts").isEmpty());
@@ -121,13 +162,13 @@ class AifToolControllerTest {
                 {
                   "requestId": "%s",
                   "tenantSlug": "demo",
-                  "externalUserId": "123",
-                  "sessionId": "%s",
+                  "externalUserId": "flowelle-user-1",
+                  "sessionId": "00000000-0000-0000-0000-000000000002",
                   "toolName": "%s",
                   "scopes": ["%s"],
                   "locale": "en-US",
                   "parameters": {}
                 }
-                """.formatted(REQUEST_ID, SESSION_ID, toolName, scope);
+                """.formatted(REQUEST_ID, toolName, scope);
     }
 }

@@ -11,6 +11,8 @@ public record AifToolRequest(
         UUID sessionId,
         String toolName,
         Set<String> scopes,
+        String authorizationJti,
+        boolean aiCoachEnabled,
         String locale,
         Map<String, Object> parameters) {
 }

@@ -74,7 +74,7 @@ public class AuthService {
         preferencesRepository.save(preferences);
 
         // Generate JWT token
-        String token = jwtService.generateToken(user);
+        String token = jwtService.generateToken(user, Boolean.TRUE.equals(preferences.getAiCoachEnabled()));
 
         // Create initial cycle in cycles service
         try {
@@ -128,7 +128,7 @@ public class AuthService {
                 .orElseThrow(() -> new RuntimeException("User preferences not found"));
 
         // Generate JWT token
-        String token = jwtService.generateToken(user);
+        String token = jwtService.generateToken(user, Boolean.TRUE.equals(preferences.getAiCoachEnabled()));
 
         // Create UserResponse
         UserResponse userResponse = new UserResponse(

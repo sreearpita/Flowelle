@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import com.flowelle.auth.model.User;
+
 import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.HashMap;
@@ -50,8 +52,22 @@ public class JwtService {
                 .compact();
     }
 
+    public String generateToken(User user, boolean aiCoachEnabled) {
+        return Jwts.builder()
+                .claims(Map.of("aiCoachEnabled", aiCoachEnabled))
+                .subject(user.getId().toString())
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
+        if (userDetails instanceof User user) {
+            return (user.getId().toString().equals(username)
+                    || user.getUsername().equals(username)) && !isTokenExpired(token);
+        }
         return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
     }
 
@@ -71,4 +87,4 @@ public class JwtService {
         byte[] keyBytes = secretKey.getBytes();
         return Keys.hmacShaKeyFor(keyBytes);
     }
-} 
+}

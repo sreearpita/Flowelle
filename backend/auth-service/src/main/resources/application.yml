@@ -38,6 +38,16 @@ aif:
   callback:
     key-id: ${AIF_CALLBACK_KEY_ID:dev-v1}
     secret: ${AIF_CALLBACK_SECRET:dev-aif-tool-secret}
+  proxy:
+    url: ${AIFRIEND_URL:}
+    tenant-key: ${AIFRIEND_TENANT_KEY:}
+  user-context:
+    issuer: ${AIF_USER_CONTEXT_ISSUER:flowelle}
+    audience: ${AIF_USER_CONTEXT_AUDIENCE:ai-friend-chat}
+    tenant: ${AIF_USER_CONTEXT_TENANT:flowelle}
+    key-id: ${AIF_USER_CONTEXT_KEY_ID:flowelle-aif-v1}
+    lifetime-seconds: ${AIF_USER_CONTEXT_LIFETIME_SECONDS:60}
+    private-key-base64: ${AIF_USER_CONTEXT_PRIVATE_KEY_BASE64:}
 
 openai:
   api-key: ${OPENAI_API_KEY:}

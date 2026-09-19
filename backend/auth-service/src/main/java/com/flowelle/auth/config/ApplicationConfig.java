@@ -49,11 +49,11 @@ public class ApplicationConfig {
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter(jwtService, userDetailsService());
+        return new JwtAuthenticationFilter(jwtService, userDetailsService(), userRepository);
     }
 
     @Bean
     public RestTemplate restTemplate() {
         return new RestTemplate();
     }
-} 
+}

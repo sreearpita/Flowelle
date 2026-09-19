@@ -12,6 +12,7 @@ import com.flowelle.cycles.dto.FlowelleCycleSummaryResponse;
 import com.flowelle.cycles.security.AifCallbackUnauthorizedException;
 import com.flowelle.cycles.security.AifCallbackVerifier;
 import com.flowelle.cycles.service.AifCycleToolService;
+import com.flowelle.cycles.service.AifCallbackReplayGuard;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -37,6 +38,7 @@ public class AifToolController {
     private final AifCallbackVerifier verifier;
     private final ObjectMapper objectMapper;
     private final AifCycleToolService aifCycleToolService;
+    private final AifCallbackReplayGuard replayGuard;
 
     @PostMapping("/cycle-summary")
     public ResponseEntity<AifToolResponse> cycleSummary(
@@ -50,6 +52,7 @@ public class AifToolController {
 
         AifToolRequest request = objectMapper.readValue(rawBody, AifToolRequest.class);
         validateEnvelope(request, headers, CYCLE_SUMMARY_TOOL, CYCLE_READ_SCOPE);
+        replayGuard.accept(request.requestId());
 
         return aifCycleToolService.buildCycleSummary(request)
                 .map(this::okResponse)
@@ -91,6 +94,10 @@ public class AifToolController {
         if (!StringUtils.hasText(request.externalUserId())) {
             throw new IllegalArgumentException("externalUserId is required");
         }
+        validateNumericExternalUserId(request.externalUserId());
+        if (!request.aiCoachEnabled()) {
+            throw new IllegalArgumentException("AI coaching consent is required");
+        }
         if (!expectedTool.equals(request.toolName())) {
             throw new IllegalArgumentException("Invalid toolName");
         }
@@ -108,6 +115,16 @@ public class AifToolController {
         Set<String> scopes = request.scopes() == null ? Set.of() : request.scopes();
         if (!scopes.contains(requiredScope)) {
             throw new IllegalArgumentException("Missing required scope");
+        }
+    }
+
+    private void validateNumericExternalUserId(String externalUserId) {
+        try {
+            if (Long.parseLong(externalUserId) <= 0) {
+                throw new NumberFormatException();
+            }
+        } catch (NumberFormatException exception) {
+            throw new IllegalArgumentException("externalUserId must be a positive numeric Flowelle user ID");
         }
     }
 

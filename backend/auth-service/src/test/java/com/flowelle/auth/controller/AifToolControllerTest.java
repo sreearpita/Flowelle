@@ -7,6 +7,8 @@ import com.flowelle.auth.security.AifCallbackUnauthorizedException;
 import com.flowelle.auth.security.AifCallbackVerifier;
 import com.flowelle.auth.security.JwtService;
 import com.flowelle.auth.service.AifPreferencesToolService;
+import com.flowelle.auth.service.AifCallbackReplayGuard;
+import com.flowelle.auth.repository.UserRepository;
 import com.flowelle.auth.support.ContractFixtures;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,10 +43,16 @@ class AifToolControllerTest {
     private AifPreferencesToolService aifPreferencesToolService;
 
     @MockBean
+    private AifCallbackReplayGuard replayGuard;
+
+    @MockBean
     private JwtService jwtService;
 
     @MockBean
     private UserDetailsService userDetailsService;
+
+    @MockBean
+    private UserRepository userRepository;
 
     @Test
     void userPreferencesReturnsBoundedFactsForSharedRequestFixture() throws Exception {
@@ -147,6 +155,26 @@ class AifToolControllerTest {
                 .andExpect(jsonPath("$.facts").isEmpty());
     }
 
+    @Test
+    void userPreferencesRejectsConsentDisabledCallback() throws Exception {
+        mockMvc.perform(post("/aif/tools/user-preferences")
+                        .headers(validHeaders())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(validBodyWithConsent("user-preferences", "preferences:read", false)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("AI coaching consent is required"));
+    }
+
+    @Test
+    void userPreferencesRejectsNonnumericExternalUserId() throws Exception {
+        mockMvc.perform(post("/aif/tools/user-preferences")
+                        .headers(validHeaders())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(validBodyWithUserId("user-preferences", "preferences:read", "flowelle-user-1")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("externalUserId must be a positive numeric Flowelle user ID"));
+    }
+
     private HttpHeaders validHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.add(AifCallbackVerifier.KEY_ID_HEADER, "dev-v1");
@@ -158,17 +186,31 @@ class AifToolControllerTest {
     }
 
     private String validBody(String toolName, String scope) {
+        return validBodyWithConsent(toolName, scope, true);
+    }
+
+    private String validBodyWithConsent(String toolName, String scope, boolean consent) {
+        return validBodyWithUserIdAndConsent(toolName, scope, "42", consent);
+    }
+
+    private String validBodyWithUserId(String toolName, String scope, String userId) {
+        return validBodyWithUserIdAndConsent(toolName, scope, userId, true);
+    }
+
+    private String validBodyWithUserIdAndConsent(String toolName, String scope, String userId, boolean consent) {
         return """
                 {
                   "requestId": "%s",
                   "tenantSlug": "demo",
-                  "externalUserId": "flowelle-user-1",
+                  "externalUserId": "%s",
                   "sessionId": "00000000-0000-0000-0000-000000000002",
                   "toolName": "%s",
                   "scopes": ["%s"],
+                  "authorizationJti": "jti-flowelle-42",
+                  "aiCoachEnabled": %s,
                   "locale": "en-US",
                   "parameters": {}
                 }
-                """.formatted(REQUEST_ID, toolName, scope);
+                """.formatted(REQUEST_ID, userId, toolName, scope, consent);
     }
 }

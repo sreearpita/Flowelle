@@ -42,7 +42,12 @@ public class AifChatProxyService {
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.set("X-AIF-Tenant-Key", tenantKey);
             headers.set("X-AIF-User-Context", tokenService.issue(user, preferences));
-            return restTemplate.postForEntity(aiFriendUrl + "/v2/chat/messages", new HttpEntity<>(request, headers), Map.class);
+            ResponseEntity<Map> response = restTemplate.postForEntity(
+                    aiFriendUrl + "/v2/chat/messages",
+                    new HttpEntity<>(request, headers),
+                    Map.class);
+            // Do not forward hop-by-hop transport headers such as Transfer-Encoding.
+            return ResponseEntity.status(response.getStatusCode()).body(response.getBody());
         } catch (RestClientException | IllegalStateException exception) {
             return ResponseEntity.status(502).body(Map.of("error", "AI-Friend is unavailable"));
         }

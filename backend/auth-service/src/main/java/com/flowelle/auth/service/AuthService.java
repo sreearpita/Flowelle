@@ -41,6 +41,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final RestTemplate restTemplate;
+    private final WellnessProfileService wellnessProfileService;
 
     @Value("${cycles.service.url}")
     private String cyclesServiceUrl;
@@ -245,6 +246,7 @@ public class AuthService {
                 .generatedAt(LocalDateTime.now().toString())
                 .profile(toUserResponse(user, preferences))
                 .privacy(toPrivacySettings(preferences))
+                .wellnessProfile(wellnessProfileService.get(userId))
                 .cycleData(cycleData)
                 .exportNotice(exportNotice)
                 .build();
@@ -272,6 +274,7 @@ public class AuthService {
 
         preferences.setDeleteRequestedAt(LocalDateTime.now());
         preferencesRepository.save(preferences);
+        wellnessProfileService.delete(userId);
         return toPrivacySettings(preferences);
     }
 

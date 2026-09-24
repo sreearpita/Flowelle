@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useAppSelector, useAppDispatch } from '../../store';
 import { updateProfile } from '../../store/slices/authSlice';
+import authService from '../../services/auth.service';
+import { WellnessProfile } from '../../types/auth';
 
 interface ProfileFormData {
   firstName: string;
@@ -15,6 +17,11 @@ const Profile: React.FC = () => {
   const { user, isLoading, error } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
   const [isEditing, setIsEditing] = useState(false);
+  const [wellness, setWellness] = useState<WellnessProfile>({
+    dietaryPattern: null, activityLevel: null, allergens: [], intolerances: [], nutritionGoals: [],
+    preferredActivities: [], exerciseGoals: [], exerciseLimitations: [],
+  });
+  const [wellnessNotice, setWellnessNotice] = useState('');
   const [formData, setFormData] = useState<ProfileFormData>({
     firstName: user?.firstName || '',
     lastName: user?.lastName || '',
@@ -37,6 +44,10 @@ const Profile: React.FC = () => {
     }
   }, [user]);
 
+  useEffect(() => {
+    authService.getWellnessProfile().then(setWellness).catch(() => setWellnessNotice('Wellness preferences are unavailable.'));
+  }, []);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -53,6 +64,17 @@ const Profile: React.FC = () => {
     } catch {
       // Error handled by slice
     }
+  };
+
+  const toggleWellness = (field: keyof WellnessProfile, value: string) => {
+    const current = wellness[field];
+    if (!Array.isArray(current)) return;
+    setWellness({ ...wellness, [field]: current.includes(value) ? current.filter(item => item !== value) : [...current, value] });
+  };
+
+  const saveWellness = async () => {
+    try { setWellness(await authService.updateWellnessProfile(wellness)); setWellnessNotice('Wellness preferences saved.'); }
+    catch { setWellnessNotice('Unable to save wellness preferences.'); }
   };
 
   if (isLoading) {
@@ -75,6 +97,27 @@ const Profile: React.FC = () => {
       <section className="bloom-card p-6 sm:p-8">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">Your profile</p>
         <h1 className="bloom-title mt-2">Manage preferences</h1>
+      </section>
+
+      <section className="bloom-card p-6 sm:p-8">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">AI personalization</p>
+        <h2 className="bloom-title mt-2 text-2xl">Nutrition and movement preferences</h2>
+        <p className="mt-2 text-sm text-muted">These structured preferences are shared only when AI coaching is enabled.</p>
+        <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
+          <label className="text-sm font-semibold text-muted">Dietary pattern
+            <select className="flow-input mt-2" value={wellness.dietaryPattern || ''} onChange={e => setWellness({ ...wellness, dietaryPattern: e.target.value || null })}>
+              <option value="">Not declared</option><option>OMNIVORE</option><option>PESCATARIAN</option><option>VEGETARIAN</option><option>VEGAN</option><option>OTHER</option><option>PREFER_NOT_TO_SAY</option>
+            </select>
+          </label>
+          <label className="text-sm font-semibold text-muted">Activity level
+            <select className="flow-input mt-2" value={wellness.activityLevel || ''} onChange={e => setWellness({ ...wellness, activityLevel: e.target.value || null })}>
+              <option value="">Not declared</option><option>LOW</option><option>MODERATE</option><option>HIGH</option><option>PREFER_NOT_TO_SAY</option>
+            </select>
+          </label>
+          <div><p className="text-sm font-semibold text-muted">Nutrition goals</p><div className="mt-2 flex flex-wrap gap-2">{['HYDRATION','PMS_SUPPORT','ENERGY_SUPPORT','IRON_RICH_FOODS','DIGESTIVE_COMFORT'].map(v => <button type="button" key={v} onClick={() => toggleWellness('nutritionGoals', v)} className={wellness.nutritionGoals.includes(v) ? 'flow-btn-primary' : 'flow-btn-secondary'}>{v.replaceAll('_', ' ')}</button>)}</div></div>
+          <div><p className="text-sm font-semibold text-muted">Preferred activities</p><div className="mt-2 flex flex-wrap gap-2">{['WALKING','YOGA','MOBILITY','STRENGTH','CYCLING','SWIMMING','RUNNING'].map(v => <button type="button" key={v} onClick={() => toggleWellness('preferredActivities', v)} className={wellness.preferredActivities.includes(v) ? 'flow-btn-primary' : 'flow-btn-secondary'}>{v}</button>)}</div></div>
+        </div>
+        <div className="mt-5 flex items-center justify-between gap-3"><span className="text-sm text-muted" role="status">{wellnessNotice}</span><button type="button" onClick={saveWellness} className="flow-btn-primary">Save wellness preferences</button></div>
       </section>
 
       {error && (

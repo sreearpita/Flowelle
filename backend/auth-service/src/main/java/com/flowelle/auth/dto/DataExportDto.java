@@ -13,6 +13,7 @@ public class DataExportDto {
     private String generatedAt;
     private UserResponse profile;
     private PrivacySettingsDto privacy;
+    private WellnessProfileDto wellnessProfile;
     private Object cycleData;
     private String exportNotice;
 }

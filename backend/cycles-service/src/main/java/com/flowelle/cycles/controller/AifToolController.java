@@ -9,10 +9,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flowelle.cycles.dto.AifToolRequest;
 import com.flowelle.cycles.dto.AifToolResponse;
 import com.flowelle.cycles.dto.FlowelleCycleSummaryResponse;
+import com.flowelle.cycles.dto.FlowelleWellnessSignalsResponse;
 import com.flowelle.cycles.security.AifCallbackUnauthorizedException;
 import com.flowelle.cycles.security.AifCallbackVerifier;
 import com.flowelle.cycles.service.AifCycleToolService;
 import com.flowelle.cycles.service.AifCallbackReplayGuard;
+import com.flowelle.cycles.service.AifWellnessSignalsService;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -32,6 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AifToolController {
     private static final String CYCLE_SUMMARY_TOOL = "cycle-summary";
     private static final String CYCLE_READ_SCOPE = "cycle:read";
+    private static final String SIGNALS_TOOL = "recent-wellness-signals";
     private static final TypeReference<Map<String, Object>> FACTS_TYPE = new TypeReference<>() {
     };
 
@@ -39,6 +42,7 @@ public class AifToolController {
     private final ObjectMapper objectMapper;
     private final AifCycleToolService aifCycleToolService;
     private final AifCallbackReplayGuard replayGuard;
+    private final AifWellnessSignalsService signalsService;
 
     @PostMapping("/cycle-summary")
     public ResponseEntity<AifToolResponse> cycleSummary(
@@ -57,6 +61,23 @@ public class AifToolController {
         return aifCycleToolService.buildCycleSummary(request)
                 .map(this::okResponse)
                 .orElseGet(this::noDataResponse);
+    }
+
+    @PostMapping("/recent-wellness-signals")
+    public ResponseEntity<AifToolResponse> recentWellnessSignals(@RequestHeader HttpHeaders headers,
+            @RequestBody String rawBody) throws JsonProcessingException {
+        verifier.verify(headers.getFirst(AifCallbackVerifier.KEY_ID_HEADER), headers.getFirst(AifCallbackVerifier.TIMESTAMP_HEADER),
+                headers.getFirst(AifCallbackVerifier.SIGNATURE_HEADER), rawBody);
+        AifToolRequest request = objectMapper.readValue(rawBody, AifToolRequest.class);
+        validateEnvelope(request, headers, SIGNALS_TOOL, "signals:read");
+        replayGuard.accept(request.requestId());
+        FlowelleWellnessSignalsResponse response = signalsService.build(Long.parseLong(request.externalUserId()));
+        if (response == null) {
+            return ResponseEntity.ok(new AifToolResponse(SIGNALS_TOOL, "NO_DATA", "No recent wellness signals are available.", Map.of(),
+                    "I could not find enough recent Flowelle signals to personalize this answer."));
+        }
+        return ResponseEntity.ok(new AifToolResponse(SIGNALS_TOOL, "OK", response.summary(),
+                objectMapper.convertValue(response, FACTS_TYPE), response.userExplanation()));
     }
 
     private ResponseEntity<AifToolResponse> okResponse(FlowelleCycleSummaryResponse summary) {

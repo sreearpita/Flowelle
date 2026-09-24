@@ -19,6 +19,17 @@ export type PrivacySettings = {
   deleteRequestedAt?: string | null;
 };
 
+export type WellnessProfile = {
+  dietaryPattern: string | null;
+  activityLevel: string | null;
+  allergens: string[];
+  intolerances: string[];
+  nutritionGoals: string[];
+  preferredActivities: string[];
+  exerciseGoals: string[];
+  exerciseLimitations: string[];
+};
+
 export type DataExport = {
   generatedAt: string;
   profile: User;

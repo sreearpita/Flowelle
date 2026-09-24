@@ -9,10 +9,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flowelle.auth.dto.AifToolRequest;
 import com.flowelle.auth.dto.AifToolResponse;
 import com.flowelle.auth.dto.FlowelleUserPreferencesResponse;
+import com.flowelle.auth.dto.FlowelleNutritionProfileResponse;
+import com.flowelle.auth.dto.FlowelleExerciseProfileResponse;
 import com.flowelle.auth.security.AifCallbackUnauthorizedException;
 import com.flowelle.auth.security.AifCallbackVerifier;
 import com.flowelle.auth.service.AifPreferencesToolService;
 import com.flowelle.auth.service.AifCallbackReplayGuard;
+import com.flowelle.auth.service.WellnessProfileService;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -32,6 +35,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class AifToolController {
     private static final String USER_PREFERENCES_TOOL = "user-preferences";
     private static final String PREFERENCES_READ_SCOPE = "preferences:read";
+    private static final String NUTRITION_PROFILE_TOOL = "nutrition-profile";
+    private static final String EXERCISE_PROFILE_TOOL = "exercise-profile";
     private static final TypeReference<Map<String, Object>> FACTS_TYPE = new TypeReference<>() {
     };
 
@@ -39,6 +44,7 @@ public class AifToolController {
     private final ObjectMapper objectMapper;
     private final AifPreferencesToolService aifPreferencesToolService;
     private final AifCallbackReplayGuard replayGuard;
+    private final WellnessProfileService wellnessProfileService;
 
     @PostMapping("/user-preferences")
     public ResponseEntity<AifToolResponse> userPreferences(
@@ -57,6 +63,45 @@ public class AifToolController {
         return aifPreferencesToolService.buildPreferences(request)
                 .map(this::okResponse)
                 .orElseGet(this::noDataResponse);
+    }
+
+    @PostMapping("/nutrition-profile")
+    public ResponseEntity<AifToolResponse> nutritionProfile(@RequestHeader HttpHeaders headers,
+            @RequestBody String rawBody) throws JsonProcessingException {
+        AifToolRequest request = verifyAndParse(headers, rawBody, NUTRITION_PROFILE_TOOL, "nutrition:read");
+        replayGuard.accept(request.requestId());
+        return response(wellnessProfileService.nutrition(Long.parseLong(request.externalUserId())), NUTRITION_PROFILE_TOOL,
+                "No Flowelle nutrition profile is available yet.");
+    }
+
+    @PostMapping("/exercise-profile")
+    public ResponseEntity<AifToolResponse> exerciseProfile(@RequestHeader HttpHeaders headers,
+            @RequestBody String rawBody) throws JsonProcessingException {
+        AifToolRequest request = verifyAndParse(headers, rawBody, EXERCISE_PROFILE_TOOL, "exercise:read");
+        replayGuard.accept(request.requestId());
+        return response(wellnessProfileService.exercise(Long.parseLong(request.externalUserId())), EXERCISE_PROFILE_TOOL,
+                "No Flowelle exercise profile is available yet.");
+    }
+
+    private AifToolRequest verifyAndParse(HttpHeaders headers, String rawBody, String tool, String scope)
+            throws JsonProcessingException {
+        verifier.verify(headers.getFirst(AifCallbackVerifier.KEY_ID_HEADER),
+                headers.getFirst(AifCallbackVerifier.TIMESTAMP_HEADER),
+                headers.getFirst(AifCallbackVerifier.SIGNATURE_HEADER), rawBody);
+        AifToolRequest request = objectMapper.readValue(rawBody, AifToolRequest.class);
+        validateEnvelope(request, headers, tool, scope);
+        return request;
+    }
+
+    private ResponseEntity<AifToolResponse> response(Object facts, String tool, String noDataSummary) {
+        if (facts == null) {
+            return ResponseEntity.ok(new AifToolResponse(tool, "NO_DATA", noDataSummary, Map.of(),
+                    "I could not find enough Flowelle profile data to personalize this answer."));
+        }
+        Map<String, Object> boundedFacts = objectMapper.convertValue(facts, FACTS_TYPE);
+        String summary = boundedFacts.getOrDefault("summary", "Flowelle profile context returned.").toString();
+        String explanation = boundedFacts.getOrDefault("userExplanation", "Used Flowelle profile context.").toString();
+        return ResponseEntity.ok(new AifToolResponse(tool, "OK", summary, boundedFacts, explanation));
     }
 
     private ResponseEntity<AifToolResponse> okResponse(FlowelleUserPreferencesResponse preferences) {

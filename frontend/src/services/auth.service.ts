@@ -1,5 +1,5 @@
 import api from './api';
-import { DataExport, PrivacySettings, User, LoginCredentials, RegisterData } from '../types/auth';
+import { DataExport, PrivacySettings, User, LoginCredentials, RegisterData, WellnessProfile } from '../types/auth';
 
 interface AuthResponse {
   user: User;
@@ -36,6 +36,16 @@ const authService = {
 
   async updateProfile(profileData: Partial<User>): Promise<User> {
     const response = await api.put<User>('/auth/me', profileData);
+    return response.data;
+  },
+
+  async getWellnessProfile(): Promise<WellnessProfile> {
+    const response = await api.get<WellnessProfile>('/auth/me/wellness-profile');
+    return response.data;
+  },
+
+  async updateWellnessProfile(profile: WellnessProfile): Promise<WellnessProfile> {
+    const response = await api.put<WellnessProfile>('/auth/me/wellness-profile', profile);
     return response.data;
   },
 

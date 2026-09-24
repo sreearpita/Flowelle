@@ -6,6 +6,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Map;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -54,10 +55,18 @@ public class AifUserContextTokenService {
                 .expiration(java.util.Date.from(Instant.ofEpochSecond(now + lifetimeSeconds)))
                 .id(UUID.randomUUID().toString())
                 .claim("tenant", tenant)
-                .claim("scope", "wellness:chat cycle:read preferences:read")
+                .claim("scope", scopes(preferences))
                 .claim("aiCoachEnabled", Boolean.TRUE.equals(preferences.getAiCoachEnabled()))
                 .signWith(privateKey(), Jwts.SIG.RS256)
                 .compact();
+    }
+
+    private String scopes(UserPreferences preferences) {
+        if (!Boolean.TRUE.equals(preferences.getAiCoachEnabled())) {
+            return "wellness:chat";
+        }
+        return String.join(" ", List.of("wellness:chat", "cycle:read", "preferences:read",
+                "nutrition:read", "exercise:read", "signals:read"));
     }
 
     public Map<String, Object> jwks() {

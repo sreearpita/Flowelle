@@ -24,6 +24,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PutMapping;
 import com.flowelle.auth.repository.UserPreferencesRepository;
+import com.flowelle.auth.dto.WellnessProfileDto;
+import com.flowelle.auth.service.WellnessProfileService;
 
 @RestController
 @RequestMapping("/auth")
@@ -33,6 +35,25 @@ public class AuthController {
 
     private final AuthService authService;
     private final UserPreferencesRepository userPreferencesRepository;
+    private final WellnessProfileService wellnessProfileService;
+
+    @GetMapping("/me/wellness-profile")
+    public ResponseEntity<WellnessProfileDto> getWellnessProfile() {
+        var principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof com.flowelle.auth.model.User user) {
+            return ResponseEntity.ok(wellnessProfileService.get(user.getId()));
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    @PutMapping("/me/wellness-profile")
+    public ResponseEntity<WellnessProfileDto> updateWellnessProfile(@Valid @RequestBody WellnessProfileDto request) {
+        var principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof com.flowelle.auth.model.User user) {
+            return ResponseEntity.ok(wellnessProfileService.update(user.getId(), request));
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
 
     @PostMapping("/register")
     @Operation(

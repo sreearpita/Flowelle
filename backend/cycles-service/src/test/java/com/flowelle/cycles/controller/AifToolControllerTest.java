@@ -7,6 +7,7 @@ import com.flowelle.cycles.security.AifCallbackUnauthorizedException;
 import com.flowelle.cycles.security.AifCallbackVerifier;
 import com.flowelle.cycles.service.AifCycleToolService;
 import com.flowelle.cycles.service.AifCallbackReplayGuard;
+import com.flowelle.cycles.service.AifWellnessSignalsService;
 import com.flowelle.cycles.support.ContractFixtures;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +42,9 @@ class AifToolControllerTest {
 
     @MockBean
     private AifCallbackReplayGuard replayGuard;
+
+    @MockBean
+    private AifWellnessSignalsService signalsService;
 
     @Test
     void cycleSummaryReturnsBoundedFactsForSharedRequestFixture() throws Exception {

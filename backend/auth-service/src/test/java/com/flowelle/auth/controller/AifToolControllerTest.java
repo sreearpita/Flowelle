@@ -8,6 +8,7 @@ import com.flowelle.auth.security.AifCallbackVerifier;
 import com.flowelle.auth.security.JwtService;
 import com.flowelle.auth.service.AifPreferencesToolService;
 import com.flowelle.auth.service.AifCallbackReplayGuard;
+import com.flowelle.auth.service.WellnessProfileService;
 import com.flowelle.auth.repository.UserRepository;
 import com.flowelle.auth.support.ContractFixtures;
 import org.junit.jupiter.api.Test;
@@ -44,6 +45,9 @@ class AifToolControllerTest {
 
     @MockBean
     private AifCallbackReplayGuard replayGuard;
+
+    @MockBean
+    private WellnessProfileService wellnessProfileService;
 
     @MockBean
     private JwtService jwtService;

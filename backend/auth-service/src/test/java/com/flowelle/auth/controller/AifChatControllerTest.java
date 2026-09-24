@@ -8,7 +8,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import com.flowelle.auth.dto.AifChatMessageRequest;
@@ -25,14 +24,17 @@ class AifChatControllerTest {
     private final AifChatMessageRequest request = new AifChatMessageRequest(UUID.randomUUID(), "How long is my cycle?", "en");
 
     @Test
-    void consentDisabledDoesNotReachProxy() {
+    void consentDisabledStillForwardsGeneralChatWithoutFlowelleFacts() {
         UserPreferences preferences = UserPreferences.builder().userId(42L).aiCoachEnabled(false).build();
         when(preferencesRepository.findById(42L)).thenReturn(Optional.of(preferences));
+        ResponseEntity<Map> forwarded = ResponseEntity.ok(Map.of("toolCalls", java.util.List.of(
+                Map.of("name", "cycle-summary", "status", "SKIPPED"))));
+        when(proxyService.forward(request, user, preferences)).thenReturn(forwarded);
 
         ResponseEntity<Map> response = controller.chat(user, request);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
-        verifyNoInteractions(proxyService);
+        assertThat(response).isSameAs(forwarded);
+        verify(proxyService).forward(request, user, preferences);
     }
 
     @Test

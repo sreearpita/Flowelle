@@ -13,6 +13,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -29,6 +30,7 @@ public class AifCallbackVerifier {
     private final Map<String, String> secretsByKeyId;
     private final Clock clock;
 
+    @Autowired
     public AifCallbackVerifier(
             @Value("${aif.callback.key-id:dev-v1}") String keyId,
             @Value("${aif.callback.secret:dev-aif-tool-secret}") String secret) {

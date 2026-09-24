@@ -17,7 +17,7 @@ class AifCallbackReplayGuardTest {
     @Test
     void rejectsDuplicateRequestIds() {
         var repository = mock(AifCallbackNonceRepository.class);
-        when(repository.saveAndFlush(any())).thenThrow(new DataIntegrityViolationException("duplicate"));
+        when(repository.insert(any(), any())).thenThrow(new DataIntegrityViolationException("duplicate"));
         var guard = new AifCallbackReplayGuard(repository);
 
         assertThatThrownBy(() -> guard.accept(UUID.randomUUID()))

@@ -33,8 +33,8 @@ public class AifChatController {
             return ResponseEntity.status(401).body(Map.of("error", "Authentication is required"));
         }
         var preferences = preferencesRepository.findById(user.getId()).orElse(null);
-        if (preferences == null || !Boolean.TRUE.equals(preferences.getAiCoachEnabled())) {
-            return ResponseEntity.status(403).body(Map.of("error", "AI coaching consent is required"));
+        if (preferences == null) {
+            return ResponseEntity.status(403).body(Map.of("error", "User preferences are required"));
         }
         return proxyService.forward(request, user, preferences);
     }

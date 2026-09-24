@@ -41,8 +41,8 @@ public class AifUserContextTokenService {
     }
 
     public String issue(User user, UserPreferences preferences) {
-        if (user.getId() == null || !Boolean.TRUE.equals(preferences.getAiCoachEnabled())) {
-            throw new IllegalStateException("AI coaching consent is required");
+        if (user.getId() == null || preferences == null) {
+            throw new IllegalStateException("User context requires an authenticated user and preferences");
         }
         long now = Instant.now().getEpochSecond();
         return Jwts.builder()
@@ -55,7 +55,7 @@ public class AifUserContextTokenService {
                 .id(UUID.randomUUID().toString())
                 .claim("tenant", tenant)
                 .claim("scope", "wellness:chat cycle:read preferences:read")
-                .claim("aiCoachEnabled", true)
+                .claim("aiCoachEnabled", Boolean.TRUE.equals(preferences.getAiCoachEnabled()))
                 .signWith(privateKey(), Jwts.SIG.RS256)
                 .compact();
     }

@@ -8,7 +8,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.flowelle.auth.model.AifCallbackNonce;
 import com.flowelle.auth.repository.AifCallbackNonceRepository;
 import com.flowelle.auth.security.AifCallbackUnauthorizedException;
 
@@ -29,7 +28,7 @@ public class AifCallbackReplayGuard {
         Instant now = Instant.now();
         repository.deleteByExpiresAtBefore(now);
         try {
-            repository.saveAndFlush(new AifCallbackNonce(requestId, now.plus(RETENTION)));
+            repository.insert(requestId, now.plus(RETENTION));
         } catch (DataIntegrityViolationException exception) {
             throw new AifCallbackUnauthorizedException("AI-Friend callback request has already been processed");
         }
